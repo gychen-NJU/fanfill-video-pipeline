@@ -98,14 +98,23 @@
 - [ ] **LRC 三句超阈值是否回头修**：第 6 句 −0.78s / 第 17 句 −0.57s / 第 24 句 +0.81s
       （阈值 0.4s；字幕已按实测起音走，但 LRC 文件本身未改）
 
----
-
-- [ ] **1080p 交付物与主母版存在 +9 px 垂直错位**（2026-09-29 01:30 由断点体检发现，**未修**）
-      同刻配准搜索：dx = 0（四个时刻全部为 0），**dy = +9 px 恒定**；配准后 MAD 改善 **49–65%**
-      （t=34 14.92→7.63 ／ t=68.5 9.40→4.37 ／ t=141.5 14.75→5.24）。即 `未来再见_PV_v2_1080p.mp4`
-      与 1344×768 主母版**不是逐像素对位的同构图版本**；成因（`87_pv_upscale.mjs` 的 crop 补偿量？）
-      **未核实**。核验脚本：[dev/_probe/ab-offset-search.mjs](../dev/_probe/ab-offset-search.mjs)、
-      [dev/_probe/ab-sharpness.mjs](../dev/_probe/ab-sharpness.mjs)。
+- [ ] **1080p 的字幕/片头字比 768p 相对小 1.4286×**（2026-09-29 01:45 核验确认，**待用户决定**）
+      两个 ASS 的 `Fontsize` 都是 **54**（[未来再见.ass](../10_h3video/pv/subs/未来再见.ass) PlayRes 1344×768、
+      [未来再见_1080.ass](../10_h3video/pv/subs/未来再见_1080.ass) PlayRes 1920×1080），而
+      [83_pv_subs.mjs](../scripts/83_pv_subs.mjs) 只缩放画布、**没缩放字号**，于是 1080p 的文字在画布里变小了。
+      实测：歌词「和你约定 未来再见」在 768p 里字形宽 350px、1080p 里 347px（比值 **0.99**，随画面放大应为 500px），
+      且是**贴底锚定**（距底 98px → 101px）。
+      对比样张：[dev/_probe/text-size-ab/](../dev/_probe/text-size-ab/)（上=现状 / 下=放大 1.4286×）、
+      [evidence_overlay_subtitle_1to1.png](../dev/_probe/upscale-verify/evidence_overlay_subtitle_1to1.png)。
+      修法：`future再见_1080.ass` 的 Fontsize 54→77（**只重烧字幕，不必重跑超分**）。
+- [x] ~~1080p 与主母版存在 +9 px 垂直错位~~ —— **撤销：这是我 01:30 的假警报**（量测误差，非交付物缺陷）。
+      真因：我拿 `.norm/timeline.mp4` 按 87 的链路还原参照帧时，把「未裁切直缩」当成了参照；
+      交付物实际等于 `uniformScale(源片裁到 1344×756 @ y=6)`，[87_pv_upscale.mjs](../scripts/87_pv_upscale.mjs)
+      的公式 `cropH=round(2688×9/16)=1512、cropY=(1536−1512)/2=12` 算出来正是这个结果（node 复算一致）。
+      独立核验（另一路子代理逐帧 SSIM 扫描）同解：峰值 oy=6、左右对称、残余位移 ≤0.07 px@1080。
+      **结论：几何无缺陷，无需重跑超分。**（顺带改正 87 里一句会误导的旧注释「裁掉上下各 12px」——那是
+      2688×1536 空间的 12px，等于源片 6px。）脚本：[ab-offset-search.mjs](../dev/_probe/ab-offset-search.mjs)、
+      [crop3-refine.mjs](../dev/_probe/crop3-refine.mjs)、[upscale-verify/report.md](../dev/_probe/upscale-verify/report.md)。
 
 ---
 
@@ -218,6 +227,21 @@
 - **文档数字修正**：`05_PV制作流水线.md` 与计划书的「21/24 句 ≤0.32s」实为 **20/24**（已改）。
 - **超分模型口径**：`87_pv_upscale.mjs` 的实际默认是 `realesr-animevideov3`，
   已据此把 `翻填项目.json` 的 `video.upscale.model` 改对（原先写的 `realesrgan-x4plus` 是错的）。
+
+### 1080p 超分质量：独立核验结论（2026-09-29 01:45，这是**质量型**验收，不是参数验收）
+
+派了一个只读子代理独立核验「1080p 到底有没有更清晰」，它自己的结论与数据：
+
+- **画面层：明显更清晰，不是单纯放大。** 公平基线（768p lanczos 到 1920×1080）下全片 3981 帧
+  SSIM-Y 均值 **0.9335**（P5 0.8363 / 中位 0.9440 / min 0.8197）、PSNR-Y 均值 27.32 dB。
+- **锐度增益随细节量单调**：特写脸 ×3.93 → 人物 ×2.74 → 夜景柱廊 ×1.89 → 近黑云 ×1.69（最高频带能量比）。
+  这条单调性是**排除「多出来的高频只是编码噪声」**的关键——若是噪声，最暗、码率最紧处应该最明显。
+- **代价**：过冲约为 lanczos 基线 2 倍；暗部出现轻微 8×8 块效应（133.3s 夜景柱廊「基本没差别/略好」）。
+- **上限说明**：768p 奈奎斯特以上的频段源里根本不存在，1080p 里那部分能量**必然是生成/锐化出来的**，不算"恢复"。
+- 证据：[dev/_probe/upscale-verify/report.md](../dev/_probe/upscale-verify/report.md) +
+  `t1_face_41.667s.png` / `t2_text_25.000s.png` / `t3_dark_133.333s.png` / `t4_dark_116.667s.png`
+  （每张都是 1:1 三格：neighbor / lanczos / native）。
+- **未覆盖**：只抽查 4 个时刻，未逐镜头普查，未做时域稳定性与音频评估；结论是单人看图判断，非盲测。
 
 ### 已知缺口（诚实记录）
 

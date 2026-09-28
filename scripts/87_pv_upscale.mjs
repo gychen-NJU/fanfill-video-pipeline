@@ -129,7 +129,9 @@ for (let c = 0; c < chunks; c++) {
 
   // 3) 超采样降到交付分辨率并编码本段
   const cropH = Math.round(MID_W * AR_H / AR_W)             // 2688 → 1512
-  const cropY = Math.round((MID_H - cropH) / 2)             // 居中裁掉上下各 12px
+  // 居中裁掉上下各 (MID_H-cropH)/2 px。按 video.baseSize 7:4 算，2688x1536 → 1512，每边 12px，
+  // 等价于源片丢掉上下各 6px 后得到精确 16:9（旧注释写"12px"易被误读成源像素，已改正）。
+  const cropY = Math.round((MID_H - cropH) / 2)
   const vf = `crop=${MID_W}:${cropH}:0:${cropY},scale=${TW}:${TH}:flags=lanczos`
   r = await tryRun(FFMPEG, ['-y', '-v', 'error', '-framerate', String(FPS), '-i', path.join(OUT, '%05d.png'),
     '-vf', vf, '-c:v', 'libx264', '-crf', CRF, '-preset', 'medium', '-pix_fmt', 'yuv420p', part], 1800000)

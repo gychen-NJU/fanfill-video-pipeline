@@ -161,22 +161,29 @@ const OUTRO = {
 }
 
 // ── 组装 ASS ────────────────────────────────────────────────────────────────
+// 画布缩放系数：样式里的字号/边距/描边/行距都是**基准画布像素**，另出一份更大画布时
+// 必须整体等比缩放，否则字会相对变小（1080p 画布比 768p 大 1.4286×，字号却同为 54
+// → 字幕在画面里缩水 1.4286×；2026-09-29 核验发现并修正）。
+const SCALE = RES_X === BASE_W && RES_Y === BASE_H ? 1 : RES_X / BASE_W
+const sc = (v) => Math.round(v * SCALE)
+const scf = (v) => Number((v * SCALE).toFixed(2))
+
 const styleLines = [
   'Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding',
-  `Style: Lyric,${FONT},${SIZE},&H00FFFFFF,&H00FFFFFF,&H00242020,&H80000000,-1,0,0,0,100,100,1.5,0,1,3,1,2,60,60,96,134`,
-  `Style: Title,${FONT},${Math.round(SIZE * 1.45)},&H00FFFFFF,&H00FFFFFF,&H00242020,&H80000000,-1,0,0,0,100,100,2,0,1,3.5,1,2,60,60,0,134`,
-  `Style: Info,${FONT},${Math.round(SIZE * 0.72)},&H00FFFFFF,&H00FFFFFF,&H00242020,&H80000000,0,0,0,0,100,100,1,0,1,2.5,1,2,80,80,0,134`,
-  `Style: Small,${FONT},${Math.round(SIZE * 0.6)},&H00E8E8E8,&H00E8E8E8,&H00242020,&H80000000,0,0,0,0,100,100,1,0,1,2,1,2,60,60,0,134`,
+  `Style: Lyric,${FONT},${sc(SIZE)},&H00FFFFFF,&H00FFFFFF,&H00242020,&H80000000,-1,0,0,0,100,100,${scf(1.5)},0,1,${scf(3)},1,2,${sc(60)},${sc(60)},${sc(96)},134`,
+  `Style: Title,${FONT},${sc(SIZE * 1.45)},&H00FFFFFF,&H00FFFFFF,&H00242020,&H80000000,-1,0,0,0,100,100,${scf(2)},0,1,${scf(3.5)},1,2,${sc(60)},${sc(60)},0,134`,
+  `Style: Info,${FONT},${sc(SIZE * 0.72)},&H00FFFFFF,&H00FFFFFF,&H00242020,&H80000000,0,0,0,0,100,100,${scf(1)},0,1,${scf(2.5)},1,2,${sc(80)},${sc(80)},0,134`,
+  `Style: Small,${FONT},${sc(SIZE * 0.6)},&H00E8E8E8,&H00E8E8E8,&H00242020,&H80000000,0,0,0,0,100,100,${scf(1)},0,1,${scf(2)},1,2,${sc(60)},${sc(60)},0,134`,
 ]
 
 const events = []
-for (const sc of SCREENS) {
-  const n = sc.lines.length
-  const step = sc.step || 74
-  sc.lines.forEach((ln, i) => {
+for (const sc2 of SCREENS) {
+  const n = sc2.lines.length
+  const step = sc(sc2.step || 74)
+  sc2.lines.forEach((ln, i) => {
     // MarginV 是距底边的距离：第 0 行最靠上，末行最靠下（表头在上面）
     const mv = (n - 1 - i) * step
-    events.push(`Dialogue: 0,${assTime(sc.start)},${assTime(sc.end)},${sc.style},,0,0,${mv},,{\\fad(500,500)}${esc(ln)}`)
+    events.push(`Dialogue: 0,${assTime(sc2.start)},${assTime(sc2.end)},${sc2.style},,0,0,${mv},,{\\fad(500,500)}${esc(ln)}`)
   })
 }
 for (const L of lyrics) {
@@ -184,7 +191,7 @@ for (const L of lyrics) {
 }
 OUTRO.lines.forEach((ln, i) => {
   // 同样：第 0 行最靠上
-  const mv = (OUTRO.lines.length - 1 - i) * 62
+  const mv = (OUTRO.lines.length - 1 - i) * sc(62)
   events.push(`Dialogue: 0,${assTime(OUTRO.start)},${assTime(OUTRO.end)},${OUTRO.style},,0,0,${mv},,{\\fad(600,600)}${esc(ln)}`)
 })
 
