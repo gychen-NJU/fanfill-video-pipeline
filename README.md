@@ -236,10 +236,10 @@ Honesty matters more than a green checkmark, so here is what is and is not estab
 - **Which upscaling model was actually used** — no argument log survives; the script default is recorded, not measured.
 - The master audio file has true peak **−0.22 dBTP**, above the −1 dBTP target; the delivery masters in `08_release/` do pass. Whether to swap them is an open decision.
 
-## Copyright
+## License
 
-Pipeline code: use it freely. **No license file is included yet — add one before publishing** (MIT or Apache-2.0 are the usual choices for a project like this).
+Pipeline code is [MIT licensed](LICENSE) — use it, fork it, ship it.
 
-**Assets are not included.** The reference run's source art, song audio and rendered video are third-party fan-work assets and are deliberately absent. The `examples/` directory contains only text: configuration, metrics and ledger entries.
+**Assets are not included, and the MIT license does not cover them.** The reference run's source art, song audio and rendered video are third-party fan-work assets and are deliberately absent from this repository. The `examples/` directory contains only text: configuration, metrics and ledger entries, published for documentation value.
 
-If you publish anything built with this, mark it as AI-generated, non-commercial, and credit the original work. That is not optional in the workflow this repo encodes — the skill's reference documents treat it as a delivery blocker.
+If you publish anything built with this pipeline, mark it as AI-generated, non-commercial, and credit the original work. That is not optional in the workflow this repo encodes — the skill's reference documents treat it as a delivery blocker.
