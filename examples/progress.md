@@ -119,7 +119,7 @@
 
 ### 开源发布：`fanfill-video-pipeline`
 
-把「可复用的那一半」抽成独立仓库并推到 GitHub：**https://github.com/gychen-NJU/fanfill-video-pipeline**（public，47 个文件 / 663 KB，`master` @ `9537ef7`）。
+把「可复用的那一半」抽成独立仓库并推到 GitHub：**https://github.com/gychen-NJU/fanfill-video-pipeline**（public，48 个文件 / 666 KB，**MIT 许可**，`master` @ `00a288f`）。
 
 - **做法**：不直接在工作区 `git init`（那里有 12.6 GB cache + 6.3 GB venvs + 2.1 GB 产物 + 244 MB 截图，一次失误就提交出几百 MB），而是用
   [dev/_probe/stage-repo.mjs](../dev/_probe/stage-repo.mjs) **复制**到一个干净 staging 目录再发布——工作区原文件零改动。

@@ -67,13 +67,61 @@ Every script takes `--plan`: it prints exactly what it would do and what it woul
 
 ## Quick start
 
-### 0. Requirements
+### 0. Install
 
-- **Node.js ≥ 18** (tested on 24). All scripts are dependency-free `.mjs`.
-- **FFmpeg + ffprobe.** On Windows make sure it is *not* the ImageMagick bundled build — set `FANFILL_FFMPEG_DIR` to be safe.
-- **DeepSeek Harness** (DSH) if you want the skill / preset / workbench integration. The scripts also run standalone.
-- **A MiniMax API key** (China region, `api.minimaxi.com`) for stage 5. Everything else is local.
-- Optional: **Real-ESRGAN ncnn-vulkan** for the free local upscale, and **ImageMagick** for a couple of cover layouts.
+The video pipeline itself has **no package dependencies** — every script is a standalone `.mjs` file. What you need are a few external binaries.
+
+| Dependency | Needed for | Required? |
+|---|---|---|
+| **Node.js ≥ 18** (tested on 24) | every script | **yes** |
+| **FFmpeg + ffprobe** | alignment, reference images, subtitles, assemble, verify | **yes** |
+| **A MiniMax API key** (China region) | shot generation — the only paid stage | only for stage 5 |
+| **Real-ESRGAN ncnn-vulkan** | free local upscale to 1080p/2K | optional |
+| **ImageMagick** | two cover layouts | optional |
+| **DeepSeek Harness** | skill / preset / workbench integration | optional |
+
+```bash
+git clone https://github.com/gychen-NJU/fanfill-video-pipeline my-song
+cd my-song
+
+node --version          # expect v18+
+ffmpeg -version         # must be REAL ffmpeg, see warning below
+node tools/smoke-test.mjs   # 13 self-checks on a synthetic workspace — writes nothing outside a temp dir
+```
+
+`tools/smoke-test.mjs` needs no assets and no network: it builds a throwaway workspace, renders the workbench snapshot and asserts 13 things. If it passes, your Node side is good.
+
+**The one install trap on Windows:** `ffmpeg` on `PATH` is often the ImageMagick bundled build, which fails on real filter graphs. Point at a real one:
+
+```powershell
+$env:FANFILL_FFMPEG_DIR = "E:\software\FFmpeg\ffmpeg-8.1.1-essentials_build\bin"
+& "$env:FANFILL_FFMPEG_DIR\ffmpeg.exe" -version   # expect "ffmpeg version 8.x ..."
+```
+
+Set it permanently (or put `"ffmpegDir": "…/bin"` in the config). The resolver order is: `FANFILL_FFMPEG_DIR` → `video.ffmpegDir` → a legacy hard path → bare `ffmpeg` on `PATH`, and it prints a one-time notice when it falls back.
+
+Full, step-by-step setup — including the DSH skill/preset/panel wiring and the video driver — is in **[docs/INSTALL.md](docs/INSTALL.md)**.
+
+### Let an agent do the install
+
+This repo is meant to be driven by a coding agent. Paste this into a fresh session **in the cloned directory** and it will work through the checklist and verify as it goes:
+
+```
+Read docs/BOOTSTRAP.md and install this project for me, following it step by step.
+Verify each step with the command it gives, stop and ask me only for things you
+cannot do yourself (the MiniMax API key, and restarting dsh web if needed).
+When you finish, run `node tools/smoke-test.mjs` and report the result.
+```
+
+`docs/BOOTSTRAP.md` is written for that: every step has an exact command, an expected result, and a "if this fails, do this instead" fallback. A shorter form that also works, if you just want the agent to figure it out from the README:
+
+```
+Install fanfill-video-pipeline from the README: check Node and ffmpeg, set
+FANFILL_FFMPEG_DIR to a real ffmpeg (not the ImageMagick one), then run
+node tools/smoke-test.mjs and tell me what it says.
+```
+
+Python is **not** required for anything in this repository — the only Python files in the reference project belong to its music line, which is not shipped here.
 
 Environment variables this repo understands:
 
@@ -82,6 +130,8 @@ Environment variables this repo understands:
 | `FANFILL_FFMPEG_DIR` | directory containing `ffmpeg` / `ffprobe` | a legacy hard path, then `PATH` |
 | `FANFILL_H3` | absolute path to the video driver `h3.mjs` | `<workspace>/tools/minimax-h3/h3.mjs` |
 | `FANFILL_MAGICK` | `magick` binary for cover layouts | a legacy hard path |
+| `FANFILL_WORKSPACE` | workspace to inspect, for `tools/*.mjs` | the current directory |
+| `MINIMAX_API_KEY` | read by `drivers/minimax-h3/` via the credentials store | `~/.dsh/.credentials.yaml` |
 
 ### 1. Get the files into a workspace
 
