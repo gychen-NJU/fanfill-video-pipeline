@@ -1,6 +1,6 @@
 # 未来再见 · 制作进度
 
-> 最后更新：2026-09-27 17:42 ｜ 当前阶段：**PV 已完成交付（17/17）** ｜ 累计花费：¥109.50
+> 最后更新：2026-09-29 00:30 ｜ 当前阶段：**PV 已完成交付（17/17）** ＋ 工作台升级为 v2（引导式，待重启验收） ｜ 累计花费：¥109.50
 
 崩坏3《女武神的餐桌Ⅱ》第八话插曲《未来再见》· AI 翻填翻唱 + AI 生成 PV。
 
@@ -39,6 +39,16 @@
 ---
 
 ## 二、操作日志（新→旧）
+
+### 2026-09-29 00:30 ｜ 工作台升级为 v2（引导式流水线工作台）
+
+- 起因（用户原话）：工作台「只能起到预览我项目内的资产和状态的效果」，需要「进行交互式引导我一步步完成整个工作流程的工作台……有清单向我索要素材，我可以点击之后提交相关素材，还可以即时和智能体对话让他帮我完成其中的一些环节」。
+- 改动：宿主半边重写为 12 端点的单条 prefix 路由（新增 `/lib/{spec,state,writes,jobs}.mjs`）；客户端半边重写为「引导手风琴 + 素材提交（上传/传文件夹/选已有）+ 对话 dock + 作业日志 + 新建歌向导」，v1 的四个只读视图移植为次级页签；新增数据层 [pipeline.default.json](../dev/翻填工作台/pipeline.default.json)（通用 7 阶段骨架）与 [工作台流水线.json](../工作台流水线.json)（本歌覆盖）。
+- 产物：`dev\翻填工作台\{index.js, client.js, lib\*.mjs, pipeline.default.json, package.json(v2.0.0)}`；v1 归档 `dev\_probe\backup\翻填工作台-v1-20260929-001152\`；**版本手册** [00_docs/10_翻填工作台v2使用手册.md](../00_docs/10_翻填工作台v2使用手册.md)。
+- 花费：**¥0**（全程本地；付费动作宿主侧 403 硬拒，只能派单给智能体）。
+- 证据：`node dev\_probe\workbench-v2-test.mjs` **117/117 PASS**；`node dev\_probe\workbench-client-render-test.mjs` **30/30 PASS**；`node dev\_probe\snapshot-test.mjs` **SNAPSHOT OK**（v1 字段与数值一字未变）；保护区 `01_input`/`02_stems`/`09_aceproject`/`music` 内容指纹零改动。
+- **补充（同一批工作，独立核验之后）**：派了一个只读子代理做对抗性核验（报告 [dev/_probe/adversarial/REPORT.md](../dev/_probe/adversarial/REPORT.md)），查出 2 个高危 + 4 个中危 + 10 个低危并**全部修掉、逐条补了回归断言**：junction 绕出歌根（加真实落点复核）、本歌覆盖文件是可执行内容（改为未受信 + 强制确认 + 解释器白名单）、`force` 后门（删）、取消后孙进程占管道导致作业卡死（5 秒强制结算）、超限请求看不到 413（先响应后断流）、一行坏数据把 `/snapshot` 打 500（分块容错）。自检因此从 94→**117** 项、客户端 27→**30** 项。另在真实 GUI 里验了 v2 客户端半边：**console.error = 0**、6 页签正常、宿主仍旧版时能优雅降级（截图 `dev\_probe\gui-verify-v2\`）。
+- 待办：用户重启 `dsh web` → 真机验收（截图 + `console.error` 计数 + 派单/上传实测）→ 换歌向导端到端演练 → 仓库同步（**推送前单独确认**）。
 
 ### 2026-09-27 17:00 ｜ 重出段 13（修正末帧衔接）
 - 命令：`node scripts/82_pv_clips.mjs --only 13 --max-cost 25`
@@ -82,6 +92,11 @@
 
 ## 四、变更历史
 
+- **2026-09-29 00:30 工作台 v1 → v2（引导式）**：用户判定 v1「只能预览项目资产和状态」 → 重做为
+  「按阶段索要素材 + 引导 + 白名单本机执行 + 一键派单给会话内智能体 + 实时日志」，换歌改用侧栏向导。
+  - v1 源码归档：`dev\_probe\backup\翻填工作台-v1-20260929-001152\`（4 文件，字节级副本，**未删除任何东西**）；
+  - 回滚脚本：`dev\_probe\workbench-rollback-v1.mjs`（预览）/ `--apply`（先备份 v2 再复制 v1 回去）；
+  - 生效：宿主半边需重启 `dsh web`，客户端半边刷新页面；使用手册见 [00_docs/10_翻填工作台v2使用手册.md](../00_docs/10_翻填工作台v2使用手册.md)。
 - **2026-09-27 15:50 v1 → v2**：段 01/02/03 改为**连续三镜**（参考 `01_input/CG/10th.jpg` 十周年礼服群像）；
   段 06 改用 `ElysianRealm.png`（往世乐土·金色夕阳群像），贴合「未曾想如若就此擦肩 / 会是此生错过最大的遗憾」；
   片头三张信息卡内容不变。
@@ -99,7 +114,7 @@
 | 1 | **技能**「翻填视频流水线」 | ✅ | [.agents/skills/fanfill-video-pipeline/](../.agents/skills/fanfill-video-pipeline/) | `SKILL.md` + [references/](../.agents/skills/fanfill-video-pipeline/references/)（01–08 共 8 份）；进度文档与目录约定为强制条款。**已在活体会话里被 `skill` 工具列出并成功加载**（技能名 `fanfill-video-pipeline`） |
 | 2 | 脚本配置化（`80–87`） | ✅ | [scripts/](../scripts/) | 新增 [lib/fanfill-config.mjs](../scripts/lib/fanfill-config.mjs)（配置读取 / 参数解析 / `--plan` / ffprobe JSON / 非覆盖命名）；**8 支脚本全部读配置 + 全部支持 `--plan`，残留本歌硬编码 0 处**。回归：`80` 重跑**逐字节一致**（17 段 / 边界 / 174s / ¥87.00 / 歌词时间轴 CSV）；`85` 重跑报告**除时间戳外逐字节一致**；`83` 两次实跑 4 个字幕文件 **sha256 相同**；另用探针副本验证 `81` 参考图 11/11、`86` 封面 8/8 逐字节相同。细节见 [改动报告](../dev/_probe/改动报告_20260928.md) |
 | 3 | 预设「翻填视频工作流」 | ✅ | [dev/翻填工作流预设/](../dev/翻填工作流预设/) | **已在 Web GUI 实测可加载**（2026-09-28）：设置 → Agent 预设 里「翻填视频工作流」不再显示红角标，`broken` 为空。**曾踩坑并修复**：漏写 `plan-mode` 的必填 `config.section` 导致整行激活失败、预设被标「加载失败」——`dsh --dump-config` 查不出来（它只验语法与合成）。排查方法与可复用脚本见下 |
-| 4 | 工作台（Web UI 插件） | ✅ | [dev/翻填工作台/](../dev/翻填工作台/) | **已在真实 GUI 里截图验收**（证据 [dev/_probe/gui-verify/](../dev/_probe/gui-verify/)）：右侧栏出现「翻填工作台」页签，5 个 Tab（歌词/素材/清单/出片/账本）全部渲染真实数据，逐个切换采集 **console.error = 0 条**；样式逐条核对全部走 `--dsw-*` 主题 token。亮/暗主题只做了代码层核对、**未实际切亮色截图**，见 [07_工作台能力探测报告.md](../00_docs/07_工作台能力探测报告.md) §6 |
+| 4 | 工作台（Web UI 插件） | ✅ v2 | [dev/翻填工作台/](../dev/翻填工作台/) | **v1 已在真实 GUI 截图验收**（证据 [dev/_probe/gui-verify/](../dev/_probe/gui-verify/)）：右侧栏出现「翻填工作台」，Tab 全渲染真实数据、**console.error = 0**。**2026-09-29 升级为 v2（引导式流水线工作台）**：7 阶段引导手风琴 + 素材提交（上传/传文件夹/选已有）+ 白名单本机执行（实时日志/可中止）+ 一键派单给会话内智能体 + 对话 dock + 新建歌向导；自检 **94/94**（宿主）＋ **27/27**（客户端无头渲染），v1 快照回归一字未变。手册：[00_docs/10_翻填工作台v2使用手册.md](../00_docs/10_翻填工作台v2使用手册.md)。真机浏览器验收**待重启 `dsh web` 后进行**，亮/暗主题仍未实测 |
 | 5 | **进度文档** | ✅ | 本文件 | 覆盖全阶段、产物路径可点击、含操作日志与账本 |
 | 6 | 端到端回归 | ✅ | [dev/_probe/final-audit.mjs](../dev/_probe/final-audit.mjs) | **DoD + 非破坏性核验 28 项全过、0 失败**；换歌验证通过（见下） |
 
@@ -119,7 +134,7 @@
 
 ### 开源发布：`fanfill-video-pipeline`
 
-把「可复用的那一半」抽成独立仓库并推到 GitHub：**https://github.com/gychen-NJU/fanfill-video-pipeline**（public，49 个文件 / 676 KB，**MIT 许可**，`master` @ `f98f57a`）。
+把「可复用的那一半」抽成独立仓库并推到 GitHub：**https://github.com/gychen-NJU/fanfill-video-pipeline**（public，51 个文件 / 731 KB，**MIT 许可**，`master` @ `b5f5f46`，**已发 Release [v1.0.0](https://github.com/gychen-NJU/fanfill-video-pipeline/releases/tag/v1.0.0)**）。
 
 - **做法**：不直接在工作区 `git init`（那里有 12.6 GB cache + 6.3 GB venvs + 2.1 GB 产物 + 244 MB 截图，一次失误就提交出几百 MB），而是用
   [dev/_probe/stage-repo.mjs](../dev/_probe/stage-repo.mjs) **复制**到一个干净 staging 目录再发布——工作区原文件零改动。
@@ -167,6 +182,7 @@
   `[...document.querySelectorAll('[class*=brokenTip]')].map(e=>e.textContent)`。
   已从 shipped 预设**逐字**取回那段 section 填进 profile 补丁与 `dev/翻填工作流预设/`，
   改完 **GUI 立刻重读（无需重启）**，5 个预设现全部可加载。
+  **该修复已同步进开源仓库**（`agent-preset/cordis.patch.yml`，提交 `b5f5f46`，即 v1.0.0 指向的提交）。
   **固化脚本**：[dev/_probe/check-preset-health.mjs](../dev/_probe/check-preset-health.mjs)（静态体检"包有必填 config 但我没写"+ 打印权威检查步骤）、
   [dev/_probe/read-preset-broken.mjs](../dev/_probe/read-preset-broken.mjs)（从 GUI 抓 broken 原因）。
 - **工作台白屏（真实 bug，已修）**：Client 半边第一次注册的模块 id 写成了 `fantian-workbench`，

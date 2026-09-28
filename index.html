@@ -269,10 +269,13 @@ do itself.</p>
   the shot list were reproduced <em>byte-for-byte</em> after the scripts were parameterised; a deliberately
   different synthetic song runs the shot-list stage with zero errors, honouring every config value
   (<code>tools/gensong-test.mjs</code>); read-only zones' fingerprints are identical before and after; the panel
-  was opened in a real browser with all five tabs rendering live data and 0 console errors.</p>
+  (v2, guided) passes two headless suites — 117 host assertions and 30 client-render assertions (both include
+  adversarial regressions) — and the repo's own smoke test still passes all 13 v1-contract assertions against it.</p>
 </div>
 <div class="note warnnote">
-  <p><strong>Not verified — treat as untested:</strong> light/dark theme rendering of the panel (token-based by
+  <p><strong>Not verified — treat as untested:</strong> the v2 panel in a real browser (its click paths,
+  uploads and light/dark themes — the suites above drive it headlessly; the v1 panel was browser-verified
+  with 0 console errors); light/dark theme rendering of the panel (token-based by
   inspection, only dark was screenshotted); the 2K paid path, dissolve transitions and the <code>L2VA</code> /
   <code>&lt;Video N&gt;</code> prompt forms were never used; which upscaling model was actually used (no argument
   log survives).</p>
@@ -314,7 +317,7 @@ do itself.</p>
 <h2>唯一值得抄走的设计</h2>
 <div class="flow"><b>文件即真相源，不引入数据库。</b>
 
-   智能体（技能 + 脚本） ────┤ 项目配置 │──── 网页面板（只读）
+   智能体（技能 + 脚本） ────┤ 项目配置 │──── 网页面板（引导式）
                                  │
               进度文档   （人可读的进度 + 产物索引）
               成本台账   （每笔花费一行）
@@ -415,10 +418,12 @@ When you finish, run \`node tools/smoke-test.mjs\` and report the result.</code>
 <div class="note oknote">
   <p><strong>验证过：</strong>整条流水线端到端跑通并交付了成片；脚本配置化后，核验报告与分镜表<strong>逐字节复现</strong>；
   一个参数刻意不同的合成曲目能跑通分镜阶段、零报错且每个配置项都生效（<code>tools/gensong-test.mjs</code>）；
-  只读保护区在整轮跑完前后内容指纹一致；工作台面板在真实浏览器里打开，5 个 Tab 全渲染真实数据、console 错误 0 条。</p>
+  只读保护区在整轮跑完前后内容指纹一致；工作台面板（v2·引导式）两套无头自检全过（宿主 117 条 + 客户端渲染 30 条，含对抗性回归），
+  仓库自带的自检 13 条断言在 v2 上也照样全过。</p>
 </div>
 <div class="note warnnote">
-  <p><strong>没验证 —— 请当未测：</strong>面板的亮/暗主题渲染（代码层确认全走主题 token，但只截过暗色）；
+  <p><strong>没验证 —— 请当未测：</strong>v2 面板在真实浏览器里的表现（点击路径、上传、亮/暗主题；上面两套是无头自检，
+  v1 面板倒是真机验过、console 错误 0 条）；面板亮/暗主题渲染（代码层确认全走主题 token，但只截过暗色）；
   2K 花钱路线、溶解转场、<code>L2VA</code> / <code>&lt;Video N&gt;</code> 这几种形态从未用过；
   超分实际用的哪个模型（没留下传参日志）。</p>
 </div>

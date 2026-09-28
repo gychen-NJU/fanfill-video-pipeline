@@ -47,15 +47,35 @@ The profile path on Windows defaults to `C:\Users\<you>\.dsh\profiles\<profile>\
 Edit the two absolute paths to match your machine, then append:
 
 ```yaml
-# 翻填工作台 (workbench): host half serves a read-only snapshot route,
-# client half registers a right-sidebar panel. Registered at HOST level so the
-# panel is available under every preset, not just the pipeline preset.
+# 翻填工作台 (workbench): host half serves the panel's routes (snapshot, upload,
+# config write-back, whitelisted runs, jobs) at /fantian-workbench/v1; client half
+# registers a right-sidebar panel. Registered at HOST level so the panel is
+# available under every preset, not just the pipeline preset.
 - insert:
     - id: fantian-workbench
       name: 'file:///<ABSOLUTE/PATH/TO>/ui-workbench/index.js'
       config:
         workspace: '<ABSOLUTE/PATH/TO/your/workspace>'
+        # ── all of the below are OPTIONAL; they only feed the panel's environment probe
+        templateRoot: '<ABSOLUTE/PATH/TO/this/repo>'   # where "new song" copies scripts/ + skill from
+        ffmpegDir: '<ABSOLUTE/PATH/TO>/ffmpeg/bin'     # else: FANFILL_FFMPEG_DIR env → video.ffmpegDir → tools/ffmpeg → PATH
+        venvsRoot: '<ABSOLUTE/PATH/TO>/venvs'          # where the sep/ and pitch/ venvs live
+        junctions:                                     # ASCII junctions your music scripts need (optional)
+          - '<ABSOLUTE/ASCII/JUNCTION>'
+        maxUploadMb: 512                               # upload cap for material submission
+        browseRoots:                                   # dirs the "new song" wizard may browse / create in
+          - '<ABSOLUTE/PARENT/OF/YOUR/SONGS>'
+        allowedInterpreters:                           # interpreters ALLOWED OUTSIDE the song root
+          - '<ABSOLUTE/PATH/TO>/venvs/pitch/Scripts/python.exe'
+        # registryPath: '<path>/songs.json'            # where the multi-song registry lives (default: next to index.js)
 ```
+
+The plugin deliberately contains **no machine-specific paths**: everything local (ffmpeg, venvs, junctions, template root, interpreter allow-list, browse roots) comes from this config block, which is why the shipped `ui-workbench/` is portable.
+
+Two safety properties worth knowing before you install it:
+
+- **The host refuses paid actions outright.** The panel can only *hand* a paid stage to the agent (with a prompt that asks for a cost estimate first). `paid`/`costCny > 0` never runs from the panel.
+- **`<song workspace>/工作台流水线.json` is executable content.** It may name an interpreter and a command line, so actions defined there are marked *untrusted*: the panel always asks for confirmation before running them, the interpreter must be inside the song root or listed in `allowedInterpreters`, and `argv` may not contain escaping paths. That also means: **do not trust a song directory that came from someone else** without reading that file.
 
 Why `file:///…` and not a package name: `dsh-client-modules` resolves a loader row's client half by walking up from the row's file to the nearest `package.json` (`locatePkgJson` → `nearestPackage`) and reading its `dsh.client` declaration. A `file:///` URL therefore makes **both** halves resolvable without putting anything into the profile's `node_modules`.
 
@@ -102,15 +122,25 @@ An unparseable profile patch is a hard startup failure, which is why the backup 
 
 1. Open the DSH web GUI, open a session in your workspace.
 2. Open the right sidebar → **+** (new tab) → the panel appears in the list as **翻填工作台**.
-3. All five tabs should render: lyrics / assets / pipeline / shots / ledger.
+3. The **引导 (guide)** tab should show seven stages, with the first unfinished stage expanded; the secondary tabs are assets / lyrics / shots / ledger / jobs. **⛶** expands the sidebar to full screen.
 4. Cross-check the data against the files:
 
 ```bash
-curl http://127.0.0.1:<port>/fantian-workbench/v1/ping      # {"ok":true,"workspace":"…"}
-curl http://127.0.0.1:<port>/fantian-workbench/v1/snapshot  # the full snapshot
+curl http://127.0.0.1:<port>/fantian-workbench/v1/ping      # {"ok":true,"workspace":"…","version":"2.0.0"}
+curl http://127.0.0.1:<port>/fantian-workbench/v1/snapshot  # the full snapshot (v1 fields + pipeline/songs/env/jobs)
 ```
 
-The panel is **read-only** — it never writes to your project. If a section fails to parse it reports the error for that section rather than blanking the page.
+5. Run the two headless suites if you want to check it before trusting the UI (they need no assets and no network):
+
+```bash
+node tools/smoke-test.mjs     # host half on a synthetic workspace (13 assertions, v1 contract)
+# the fuller suites live next to the plugin in the authoring workspace:
+#   workbench-v2-test.mjs (95) / workbench-client-render-test.mjs (27)
+```
+
+**What it writes:** material uploads land in the slot's target directory (never overwriting — a clash becomes `-2`), and the matching key in `翻填项目.json` is updated **after** backing the file up and checking a sha256/mtime lock. Paid actions are refused by the host outright — the panel can only hand them to the agent. Nothing else in your project is touched.
+
+**Restart vs refresh:** editing the plugin's **host** half (`index.js`, `lib/*.mjs`) or the profile patch needs a `dsh web` restart; editing the **client** half (`client.js`) only needs a page refresh. Measured: a JS edit is *not* hot-reloaded (the HMR watcher ships with `root: []`), while a profile-patch edit applies in about two seconds.
 
 ---
 

@@ -1,0 +1,70 @@
+{
+  "_comment": [
+    "工作台『本歌覆盖』文件的模板（复制到 <歌曲工作区>/工作台流水线.json 再按需改）。",
+    "通用骨架在插件自带的 pipeline.default.json 里；这里只写**这一首歌**真正存在的东西。",
+    "合并语义：stages.<id>.actions / slots / form / notes 一律追加，同 id 覆盖；不写也能用。",
+    "占位符：argv/exec 里的 {{config.x}} 与 {{dirs.y}} 会解析成绝对路径；requires/outputs/artifacts 里解析成歌根相对路径。",
+    "kind：preview = 只读（可一键本机跑）｜local = 写产物但免费（需二次确认）｜paid = 花钱（工作台永不执行，只能派单给智能体）。",
+    "下面每条 action 的解释器路径都是占位符：请换成你这台机器上真实存在的解释器（例如你的 venv 里的 python.exe）。"
+  ],
+  "schema": 1,
+  "song": "<歌名>",
+  "stages": {
+    "s2": {
+      "notes": [
+        "音乐线脚本通常是『歌专用』的（写死了本歌文件名/工作目录），所以这一段的动作要按你自己的工具链来写。",
+        "如果某个环节必须开 GUI 程序或需要人耳判断，就不要做成 action —— 留给『让 agent 跑』。"
+      ],
+      "slots": [
+        {
+          "id": "stemsVocals",
+          "label": "分离人声（干声）",
+          "required": false,
+          "accept": [".wav", ".flac"],
+          "targetDir": "02_stems",
+          "suggestedName": null,
+          "configKey": "audio.stemsVocals",
+          "hint": "自己已经分离好就直接交进来；否则让 agent 跑这一阶段"
+        }
+      ],
+      "actions": [
+        {
+          "id": "music.loudness",
+          "label": "响度 / 真峰值校验（只打印）",
+          "kind": "preview",
+          "interpreter": "powershell",
+          "argv": [
+            "-NoProfile",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-File",
+            "scripts/90_loudness_check.ps1",
+            "-InFile",
+            "{{config.audio.master}}"
+          ],
+          "requires": [{ "kind": "file", "path": "{{config.audio.master}}" }],
+          "writes": false,
+          "costCny": 0,
+          "timeoutMs": 300000,
+          "note": "标准：−14 LUFS ±1 / TP ≤ −1 dBTP"
+        },
+        {
+          "id": "music.pitch-notes",
+          "label": "从人声提取音符（写 03_midi/）",
+          "kind": "local",
+          "interpreter": "<YOUR_VENV>/Scripts/python.exe",
+          "argv": ["scripts/14_pyin_notes.py", "--lrc", "{{config.song.lrc}}"],
+          "requires": [{ "kind": "file", "path": "{{config.audio.stemsVocals}}" }],
+          "writes": true,
+          "costCny": 0,
+          "timeoutMs": 1800000
+        }
+      ]
+    },
+    "s4": {
+      "notes": [
+        "出片是这个流水线里**唯一花钱**的阶段：工作台不会替你按下付费按钮，只会把带报价要求的派单发进会话。"
+      ]
+    }
+  }
+}

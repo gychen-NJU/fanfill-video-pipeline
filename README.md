@@ -14,7 +14,7 @@ Turn a song plus a rewritten lyric sheet into a finished **cover master + PV mus
 
 ```
                         ┌──────────────────┐
-   agent (skill + scripts) ────┤  project config  │──── web workbench (read-only)
+   agent (skill + scripts) ────┤  project config  │──── web workbench (guided)
                         └──────────────────┘
                                  │
               progress doc    (human-readable progress + artefact index)
@@ -193,7 +193,7 @@ mkdir -p .agents/skills
 cp -r skills/fanfill-video-pipeline .agents/skills/     # hot-reloaded, no restart
 ```
 
-The panel and preset are two rows appended to your DSH profile patch — see [`docs/INSTALL.md`](docs/INSTALL.md) §2, which explains why the two absolute paths must be edited.
+The panel and preset are two rows appended to your DSH profile patch — see [`docs/INSTALL.md`](docs/INSTALL.md) §2, which explains why the two absolute paths must be edited. What the panel does, how to customise its stage list, and the trust model it enforces: [`docs/09_workbench.md`](docs/09_workbench.md) (中文).
 
 ---
 
@@ -234,7 +234,7 @@ fanfill-video-pipeline/
 ├── skills/fanfill-video-pipeline/   # the SOP: SKILL.md + references/01..08
 ├── scripts/                          # 80–87 + 80b + lib/fanfill-config.mjs
 ├── drivers/minimax-h3/               # dependency-free video-gen driver + MCP server
-├── ui-workbench/                     # DSH UI plugin (host route + client panel)
+├── ui-workbench/                     # DSH UI plugin (guided pipeline panel)
 ├── agent-preset/                     # DSH agent preset
 ├── tools/                            # reuse checks (smoke + cross-song genericity)
 ├── examples/                         # artefacts from ONE real run, for reference
@@ -252,9 +252,10 @@ Honesty matters more than a green checkmark.
 - The shot-list script, re-run after refactoring, reproduced the delivered shot list **byte-for-byte** (cut boundaries, generated seconds, cost estimate, lyric timing CSV).
 - **Cross-song genericity:** `tools/gensong-test.mjs` builds a throwaway workspace with deliberately different parameters (different name, length, BPM, aspect ratio, output directory, shot cap) and runs the shot-list stage in it with zero errors, honouring every config value.
 - Non-destructiveness: the read-only zones' content fingerprints are identical before and after a full run.
-- The workbench panel was opened in a real browser and screenshotted; all five tabs rendered live data with **0 console errors**.
+- **The workbench panel (v2)** — guided 7-stage pipeline: per-stage material slots you can upload or point at existing files, whitelisted local runs with live logs, one-click hand-off of a stage to the agent in the current chat, plus a chat dock. Verified by two headless suites (`117` host assertions and `30` client-render assertions, both including adversarial regressions), and the v1 snapshot contract is unchanged (the repo's own `tools/smoke-test.mjs` still passes all 13 assertions against v2). A paid action is refused by the host outright, and any command that comes from the per-song override file is marked untrusted and always asks for confirmation.
 
 **Not verified — treat as untested**
+- **The v2 workbench in a real browser** (its own click paths, uploads, and light/dark themes): the two suites above drive it headlessly (they do catch render and wiring errors); the browser pass had not been re-run at the time of writing. The v1 panel *was* browser-verified (five tabs, 0 console errors).
 - **Light/dark theme rendering** of the panel. Styles use theme tokens exclusively (checked rule by rule), but only the dark theme was actually screenshotted.
 - **The 2K paid path**, dissolve transitions, and the `L2VA` / `<Video N>` / `<Audio N>` prompt forms were never used in the reference run.
 - **Which upscaling model was actually used** — no argument log survives; the script default is recorded, not measured.

@@ -1,0 +1,527 @@
+{
+  "schema": 1,
+  "id": "fanfill-pipeline",
+  "version": "2.0.0",
+  "title": "翻填视频流水线（通用骨架）",
+  "note": [
+    "本文件是工作台的「引导内容」单一来源：每个阶段的素材槽（要你交什么）、动作（能一键跑什么）、",
+    "产物与验收（怎么算完成）都写在这里，代码只是渲染与执行。换歌时不改这里，改 <歌根>/工作台流水线.json 做局部覆盖。",
+    "占位符：argv/exec 里的 {{config.x}} 与 {{dirs.y}} 解析成**绝对路径**；outputs/artifacts/requires 里的解析成**歌根相对路径**。",
+    "动作 kind：preview=只读预览（--plan，工作台可一键跑）｜local=写产物但免费（需二次确认）｜paid=花钱（工作台永不执行，只派单给 agent）。",
+    "检查器 kind 只有五种：configKey / file / glob / manual / allOf / anyOf（anyOf 与 allOf 内部递归同一套）。"
+  ],
+  "stages": [
+    {
+      "id": "s1",
+      "n": 1,
+      "line": "both",
+      "title": "素材盘点与配置",
+      "goal": "把这一首歌的「原曲 + 翻填词 + 参考素材」交进来，写成脚本唯一参数来源 翻填项目.json",
+      "runner": "workbench",
+      "gate": "配置六键齐全；原曲与翻填词 LRC 已入库",
+      "slots": [
+        {
+          "id": "originalAudio",
+          "label": "原曲音频",
+          "required": true,
+          "accept": [".mp3", ".wav", ".flac", ".m4a", ".aac", ".ogg", ".opus"],
+          "targetDir": "01_input",
+          "suggestedName": "原曲",
+          "configKey": "audio.reference",
+          "alsoKeys": ["audio.referenceLocal"],
+          "hint": "分离与对齐的事实来源；建议放一份到工作区内，别只留外部路径"
+        },
+        {
+          "id": "lyricLrc",
+          "label": "翻填词 LRC",
+          "required": true,
+          "accept": [".lrc", ".txt"],
+          "targetDir": "music",
+          "suggestedName": "翻填",
+          "configKey": "song.lrc",
+          "hint": "一句一行带时间码；分镜与字幕都从它出发"
+        },
+        {
+          "id": "originalLrc",
+          "label": "原词 LRC（可选）",
+          "required": false,
+          "accept": [".lrc", ".txt"],
+          "targetDir": "music",
+          "suggestedName": "原词",
+          "configKey": null,
+          "hint": "按音节对齐时要用原词做锚点"
+        },
+        {
+          "id": "originalMidi",
+          "label": "原版 MIDI（可选）",
+          "required": false,
+          "accept": [".mid", ".midi"],
+          "targetDir": "01_input",
+          "suggestedName": null,
+          "configKey": null,
+          "hint": "有原版 MIDI 就不必从音频硬扒"
+        },
+        {
+          "id": "cgRefs",
+          "label": "CG / 参考图（可选）",
+          "required": false,
+          "accept": [".jpg", ".jpeg", ".png", ".webp"],
+          "targetDir": "01_input/CG",
+          "suggestedName": null,
+          "multi": true,
+          "configKey": null,
+          "hint": "PV 参考图来源；可整目录上传，文件名会保留"
+        },
+        {
+          "id": "voiceRefs",
+          "label": "音色参考素材（可选）",
+          "required": false,
+          "accept": [".wav", ".mp3", ".flac"],
+          "targetDir": "01_input/refer_audio",
+          "suggestedName": null,
+          "multi": true,
+          "configKey": null,
+          "hint": "用自己的音色训练/换音色时才需要"
+        }
+      ],
+      "form": [
+        { "key": "song.name", "label": "歌名", "type": "text", "required": true },
+        { "key": "song.source", "label": "原曲来源", "type": "text", "required": true, "hint": "例：某作品 第N话 插曲" },
+        { "key": "song.bpm", "label": "BPM", "type": "number", "required": true },
+        { "key": "song.totalSec", "label": "总长（秒）", "type": "number", "required": true },
+        { "key": "song.fps", "label": "帧率", "type": "number", "required": false },
+        { "key": "audio.voice.target", "label": "目标音色", "type": "text", "required": true },
+        { "key": "audio.voice.engine", "label": "音色引擎", "type": "text", "required": false, "hint": "ace-studio ｜ ddsp-svc 等" },
+        { "key": "audio.separation", "label": "分离路线", "type": "text", "required": false, "hint": "ace ｜ python-audio-separator" },
+        { "key": "budget.totalCny", "label": "总预算（元）", "type": "number", "required": true },
+        { "key": "credits.original.词", "label": "原词", "type": "text", "required": false },
+        { "key": "credits.original.曲", "label": "原曲", "type": "text", "required": false },
+        { "key": "credits.thisVersion.改词", "label": "本次改词署名", "type": "text", "required": false }
+      ],
+      "steps": [
+        {
+          "id": "s1.config",
+          "title": "配置就位（schema v1 六键齐全）",
+          "outputs": [
+            { "kind": "configKey", "key": "song.name" },
+            { "kind": "configKey", "key": "song.lrc" },
+            { "kind": "configKey", "key": "audio.reference" },
+            { "kind": "configKey", "key": "video.dir" }
+          ],
+          "acceptance": ["翻填项目.json 可被 scripts/lib/fanfill-config.mjs 读出且 problems 为空"]
+        },
+        {
+          "id": "s1.survey",
+          "title": "素材盘点（缺什么一目了然）",
+          "outputs": [
+            { "kind": "file", "path": "{{config.song.lrc}}" },
+            { "kind": "file", "path": "{{config.audio.reference}}" }
+          ],
+          "acceptance": ["必填素材齐；可选素材缺项在面板上以 ⛔ 显示且不阻塞后续"]
+        }
+      ],
+      "actions": [
+        {
+          "id": "cfg.validate",
+          "label": "配置自检（进程内，不写文件）",
+          "kind": "preview",
+          "exec": { "builtin": "config-check" },
+          "writes": false,
+          "costCny": 0,
+          "timeoutMs": 10000,
+          "note": "按《翻填项目配置规范》§9 的规则检查：schema、六键、rel 路径、预算与单价"
+        },
+        {
+          "id": "env.probe",
+          "label": "环境探活（node/ffmpeg/venv/ACE）",
+          "kind": "preview",
+          "exec": { "builtin": "env-probe" },
+          "writes": false,
+          "costCny": 0,
+          "timeoutMs": 10000,
+          "note": "只查存在性，不启动任何东西"
+        }
+      ],
+      "artifacts": ["翻填项目.json", "_进度/进度.md", "01_input/", "music/"],
+      "agentPrompt": "【工作台派单 · 阶段1 素材盘点与配置】歌名「{{song.name}}」，歌根 {{root}}。现有素材：{{materials}}。请按技能 fanfill-video-pipeline 的阶段1：读 翻填项目.json 与 _进度/进度.md，核对六键与九目录是否合规，把缺的素材列成清单告诉我（不要自己编文件名），并把本次结论追加写进 _进度/进度.md。若配置有问题，改配置前先说明改哪几项。"
+    },
+    {
+      "id": "s2",
+      "n": 2,
+      "line": "music",
+      "title": "分离 / 扒谱 / 出人声 / 混音",
+      "goal": "把原曲拆成伴奏与干声，扒出音节网格，出人声并混成母版（音乐线）",
+      "runner": "agent",
+      "gate": "02_stems 两轨 + 对齐版 MIDI + 人声渲染 + 母版响度双 PASS",
+      "slots": [
+        {
+          "id": "stemsVocals",
+          "label": "分离人声（干声）",
+          "required": false,
+          "accept": [".wav", ".flac"],
+          "targetDir": "02_stems",
+          "suggestedName": null,
+          "configKey": "audio.stemsVocals",
+          "hint": "若你已自己分离好，直接把文件交进来；否则让 agent 跑这一阶段"
+        },
+        {
+          "id": "stemsInstrumental",
+          "label": "伴奏",
+          "required": false,
+          "accept": [".wav", ".flac"],
+          "targetDir": "02_stems",
+          "suggestedName": null,
+          "configKey": "audio.instrumental",
+          "hint": "混音与对齐要用"
+        },
+        {
+          "id": "aceVocal",
+          "label": "人声渲染（ACE/合成产物）",
+          "required": false,
+          "accept": [".wav", ".flac"],
+          "targetDir": "09_aceproject",
+          "suggestedName": null,
+          "configKey": "audio.aceVocal",
+          "hint": "歌词对齐的实测起音就从这个文件来"
+        },
+        {
+          "id": "master",
+          "label": "音乐成品（母版）",
+          "required": false,
+          "accept": [".wav", ".flac"],
+          "targetDir": "09_aceproject",
+          "suggestedName": null,
+          "configKey": "audio.master",
+          "hint": "song.totalSec 的事实来源；PV 的声轨就是它"
+        }
+      ],
+      "steps": [
+        {
+          "id": "s2.stems",
+          "title": "人声/伴奏分离",
+          "outputs": [{ "kind": "configKey", "key": "audio.instrumental" }],
+          "acceptance": ["伴奏 + 人声两轨；分离模型记进 audio.separationModel"]
+        },
+        {
+          "id": "s2.grid",
+          "title": "扒谱 / 对齐版 MIDI",
+          "outputs": [
+            { "kind": "glob", "pattern": "03_midi/*", "min": 1 }
+          ],
+          "acceptance": ["按目标工程的 BPM 写 tick；一字一格的词格表已产出"]
+        },
+        {
+          "id": "s2.vocal",
+          "title": "出人声（ACE / 其他引擎）",
+          "outputs": [{ "kind": "configKey", "key": "audio.aceVocal" }],
+          "acceptance": ["换声库后重铺歌词并回读校验；听感需人判断（脚本只能证明字符一致）"]
+        },
+        {
+          "id": "s2.svc",
+          "title": "换音色 SVC（可选）",
+          "outputs": [{ "kind": "manual" }],
+          "acceptance": ["链路备好即可，不用不必跑；产物落 06_svc"]
+        },
+        {
+          "id": "s2.mix",
+          "title": "混音 + 响度双 PASS",
+          "outputs": [{ "kind": "configKey", "key": "audio.master" }],
+          "acceptance": ["−14 LUFS ±1 / 真峰值 ≤ −1 dBTP"]
+        }
+      ],
+      "actions": [],
+      "artifacts": ["02_stems/", "03_midi/", "04_lyrics/", "05_vocals/", "06_svc/", "07_mix/", "09_aceproject/"],
+      "agentPrompt": "【工作台派单 · 阶段2 分离/扒谱/出人声/混音】歌名「{{song.name}}」，歌根 {{root}}。配置事实：{{configSummary}}。缺：{{missing}}。请先加载技能 fanfill-video-pipeline 并读 _进度/进度.md 与 翻填项目.json，从断点续做本阶段；本机已有工具链（分离 venv、扒谱 venv、ACE Studio CLI、SXSEditor）以工作区脚本与 00_docs 记录为准，不要凭记忆猜路径。纪律：非破坏性（新产物只新增，冲突加 -2）；花钱前先报价；每批操作结束追加写进度文档。做完把本阶段产物的**绝对路径**与验收结论回给我。"
+    },
+    {
+      "id": "s3",
+      "n": 3,
+      "line": "video",
+      "title": "歌词对齐与分镜",
+      "goal": "用实测起音校正 LRC，切出 ≤15s 的分镜并生成每段的 prompt 骨架",
+      "runner": "agent",
+      "gate": "24/24 句对齐（或逐句给出偏差）；分镜无缝铺满且不切断歌词句",
+      "slots": [],
+      "steps": [
+        {
+          "id": "s3.align",
+          "title": "歌词对齐（LRC 名义时间 vs 实测起音）",
+          "outputs": [{ "kind": "file", "path": "{{dirs.planDir}}/lyrics_timing.csv" }],
+          "acceptance": ["逐句偏差入表；超 0.4s 的句子列出并给出是否回头修 LRC 的建议"]
+        },
+        {
+          "id": "s3.shotlist",
+          "title": "分镜（段号/区间/生成秒/模式/素材）",
+          "outputs": [
+            { "kind": "file", "path": "{{dirs.planDir}}/segments.json" },
+            { "kind": "glob", "pattern": "{{dirs.planDir}}/segments.json", "min": 1 }
+          ],
+          "acceptance": ["每段 ≤ segMaxSec；零切断歌词句；边界吸附到静音谷"]
+        },
+        {
+          "id": "s3.prompts",
+          "title": "每段 prompt 骨架",
+          "outputs": [{ "kind": "glob", "pattern": "{{dirs.promptDir}}/*.txt", "min": 1 }],
+          "acceptance": ["骨架生成后必须逐段填写，再由 80b 自检"]
+        }
+      ],
+      "actions": [
+        {
+          "id": "pv.plan",
+          "label": "分镜预览（--plan，只打印不写）",
+          "kind": "preview",
+          "interpreter": "node",
+          "argv": ["scripts/80_pv_shotlist.mjs", "--plan"],
+          "requires": [
+            { "kind": "file", "path": "{{config.song.lrc}}" },
+            { "kind": "file", "path": "{{config.audio.master}}" }
+          ],
+          "writes": false,
+          "costCny": 0,
+          "timeoutMs": 600000
+        },
+        {
+          "id": "pv.shotlist",
+          "label": "分镜真跑（写 plan/ 与 prompt 骨架）",
+          "kind": "local",
+          "interpreter": "node",
+          "argv": ["scripts/80_pv_shotlist.mjs"],
+          "requires": [
+            { "kind": "file", "path": "{{config.song.lrc}}" },
+            { "kind": "file", "path": "{{config.audio.master}}" }
+          ],
+          "writes": true,
+          "costCny": 0,
+          "timeoutMs": 1800000
+        },
+        {
+          "id": "pv.promptcheck",
+          "label": "prompt 自检（字符上限/字段/禁用词）",
+          "kind": "preview",
+          "interpreter": "node",
+          "argv": ["scripts/80b_check_prompts.mjs", "--plan"],
+          "requires": [{ "kind": "file", "path": "{{dirs.planDir}}/segments.json" }],
+          "writes": false,
+          "costCny": 0,
+          "timeoutMs": 120000
+        }
+      ],
+      "artifacts": ["{{dirs.planDir}}/", "{{dirs.promptDir}}/"],
+      "agentPrompt": "【工作台派单 · 阶段3 歌词对齐与分镜】歌名「{{song.name}}」，歌根 {{root}}，当前状态：{{stageStatus}}。请加载技能 fanfill-video-pipeline，按阶段3 执行：先 `node scripts/80_pv_shotlist.mjs --plan` 看预览，确认无误后真跑；然后填报每段 prompt（参考 references/03_prompt规范.md），最后 `node scripts/80b_check_prompts.mjs --plan` 自检通过。分镜的每段区间、模式、参考图选择都要给出理由。改产物前若已有旧版，归档到 history 再出新的（非破坏性）。"
+    },
+    {
+      "id": "s4",
+      "n": 4,
+      "line": "video",
+      "title": "出片（唯一花钱的阶段）",
+      "goal": "按分镜逐段生成视频片段（MiniMax H3）——这是全流程唯一花钱的地方",
+      "runner": "agent",
+      "gate": "17/17（或全部）段有成片；逐段 ffprobe 通过；花费入台账",
+      "paid": true,
+      "slots": [],
+      "steps": [
+        {
+          "id": "s4.refs",
+          "title": "参考图（去水印 + 缩放）",
+          "outputs": [{ "kind": "glob", "pattern": "{{dirs.refDir}}/*.jpg", "min": 1 }],
+          "acceptance": ["参考图分辨率与去水印规则按配置；旧图归档不覆盖"]
+        },
+        {
+          "id": "s4.prompts",
+          "title": "prompt 全部就位且自检通过",
+          "outputs": [{ "kind": "glob", "pattern": "{{dirs.promptDir}}/*.txt", "min": 1 }],
+          "acceptance": ["无 skeleton 残留；≤ maxPromptChars"]
+        },
+        {
+          "id": "s4.clips",
+          "title": "出片（逐段/按波次）",
+          "outputs": [{ "kind": "glob", "pattern": "{{dirs.clipDir}}/*.mp4", "min": 1 }],
+          "acceptance": ["每段成片能 ffprobe；花费逐笔记台账；超 --max-cost 立即停"]
+        }
+      ],
+      "actions": [
+        {
+          "id": "pv.refs.plan",
+          "label": "参考图预览（--plan）",
+          "kind": "preview",
+          "interpreter": "node",
+          "argv": ["scripts/81_pv_refs.mjs", "--plan"],
+          "writes": false,
+          "costCny": 0,
+          "timeoutMs": 120000
+        },
+        {
+          "id": "pv.clips.plan",
+          "label": "出片报价（--plan：逐段预估，不发请求）",
+          "kind": "preview",
+          "interpreter": "node",
+          "argv": ["scripts/82_pv_clips.mjs", "--plan"],
+          "requires": [{ "kind": "file", "path": "{{dirs.planDir}}/segments.json" }],
+          "writes": false,
+          "costCny": 0,
+          "timeoutMs": 120000,
+          "note": "唯一花钱的脚本；工作台**只**用它做报价，绝不在面板里直接出片"
+        }
+      ],
+      "artifacts": ["{{dirs.refDir}}/", "{{dirs.clipDir}}/", "{{dirs.planDir}}/cost_log.csv"],
+      "agentPrompt": "【工作台派单 · 阶段4 出片（花钱，必须先报价）】歌名「{{song.name}}」，歌根 {{root}}，已花 {{spent}} / 预算 {{budget}}。请先 `node scripts/82_pv_clips.mjs --plan` 给出本批逐段预估与合计金额，**把金额报给我并等我确认**；确认后用 `--max-cost` 兜底执行（推荐 `--skip-done` 续拍），每笔花费追加进 _进度/成本台账.csv。若单段需要重出，先归档旧片到 history 再出新的。逐段完成后用 ffprobe 抽检并把结果告诉我。"
+    },
+    {
+      "id": "s5",
+      "n": 5,
+      "line": "video",
+      "title": "字幕与合成",
+      "goal": "出字幕（跟随实测起音、保底时长），再归一化→拼接→烧字幕→混音成片",
+      "runner": "workbench",
+      "gate": "字幕句数与歌词一致；成片时长/帧率/响度符合配置",
+      "slots": [],
+      "steps": [
+        {
+          "id": "s5.subs",
+          "title": "字幕（ASS/SRT，行级）",
+          "outputs": [{ "kind": "glob", "pattern": "{{dirs.subDir}}/*.ass", "min": 1 }],
+          "acceptance": ["句数一致；单一字体；短于保底时长的句子顺延"]
+        },
+        {
+          "id": "s5.assemble",
+          "title": "合成（成片）",
+          "outputs": [{ "kind": "glob", "pattern": "{{dirs.dir}}/*.mp4", "min": 1 }],
+          "acceptance": ["分辨率/时长/帧率与配置一致；响度双 PASS"]
+        }
+      ],
+      "actions": [
+        {
+          "id": "pv.subs.plan",
+          "label": "字幕预览（--plan）",
+          "kind": "preview",
+          "interpreter": "node",
+          "argv": ["scripts/83_pv_subs.mjs", "--plan"],
+          "requires": [{ "kind": "file", "path": "{{dirs.planDir}}/lyrics_timing.csv" }],
+          "writes": false,
+          "costCny": 0,
+          "timeoutMs": 120000
+        },
+        {
+          "id": "pv.subs",
+          "label": "字幕真出（写 subs/）",
+          "kind": "local",
+          "interpreter": "node",
+          "argv": ["scripts/83_pv_subs.mjs"],
+          "requires": [{ "kind": "file", "path": "{{dirs.planDir}}/lyrics_timing.csv" }],
+          "writes": true,
+          "costCny": 0,
+          "timeoutMs": 600000
+        },
+        {
+          "id": "pv.assemble.plan",
+          "label": "合成预览（--plan）",
+          "kind": "preview",
+          "interpreter": "node",
+          "argv": ["scripts/84_pv_assemble.mjs", "--plan"],
+          "requires": [{ "kind": "glob", "pattern": "{{dirs.clipDir}}/*.mp4", "min": 1 }],
+          "writes": false,
+          "costCny": 0,
+          "timeoutMs": 120000
+        }
+      ],
+      "artifacts": ["{{dirs.subDir}}/", "{{dirs.dir}}/*.mp4"],
+      "agentPrompt": "【工作台派单 · 阶段5 字幕与合成】歌名「{{song.name}}」，歌根 {{root}}。请按技能阶段5：`node scripts/83_pv_subs.mjs --w <宽> --h <高> --tag <tag>` 出字幕，再 `node scripts/84_pv_assemble.mjs` 合成；两条都先 `--plan` 看一遍。产物命名与归档遵守非破坏性规则；完成后把成片绝对路径与 ffprobe 关键参数回给我。"
+    },
+    {
+      "id": "s6",
+      "n": 6,
+      "line": "video",
+      "title": "超分与核验",
+      "goal": "本地免费超分到交付分辨率，再跑 7 项核验",
+      "runner": "workbench",
+      "gate": "交付分辨率文件存在；核验 report.md 全绿",
+      "slots": [],
+      "steps": [
+        {
+          "id": "s6.upscale",
+          "title": "超分（本地 Real-ESRGAN，免费）",
+          "outputs": [{ "kind": "glob", "pattern": "{{dirs.dir}}/*{{deliverTag}}*.mp4", "min": 1 }],
+          "acceptance": ["重烧目标分辨率字幕；与源帧 1:1 对比确认更清晰（质量型需求要看对比，不只看参数）"]
+        },
+        {
+          "id": "s6.verify",
+          "title": "核验（7 项）",
+          "outputs": [{ "kind": "file", "path": "{{dirs.verifyDir}}/report.md" }],
+          "acceptance": ["规格/响度/指定画面/字幕/原创性/接缝逐项过；不通过的项列出来"]
+        }
+      ],
+      "actions": [
+        {
+          "id": "pv.upscale.plan",
+          "label": "超分预览（--plan）",
+          "kind": "preview",
+          "interpreter": "node",
+          "argv": ["scripts/87_pv_upscale.mjs", "--plan"],
+          "writes": false,
+          "costCny": 0,
+          "timeoutMs": 120000
+        },
+        {
+          "id": "pv.verify.plan",
+          "label": "核验预览（--plan）",
+          "kind": "preview",
+          "interpreter": "node",
+          "argv": ["scripts/85_pv_verify.mjs", "--plan"],
+          "writes": false,
+          "costCny": 0,
+          "timeoutMs": 120000
+        }
+      ],
+      "artifacts": ["{{dirs.dir}}/", "{{dirs.verifyDir}}/"],
+      "agentPrompt": "【工作台派单 · 阶段6 超分与核验】歌名「{{song.name}}」，歌根 {{root}}。请按技能阶段6：先 `node scripts/87_pv_upscale.mjs --plan` 确认交付分辨率与模型，再真跑超分；然后 `node scripts/85_pv_verify.mjs --w <宽> --h <高>` 跑 7 项核验，把逐项结果与抽帧路径给我。若有项不过，不要只看参数达标就下结论——把对比帧/对比段给我判。"
+    },
+    {
+      "id": "s7",
+      "n": 7,
+      "line": "video",
+      "title": "封面与投稿文案",
+      "goal": "出封面（多版式/多尺寸）与投稿文案（含署名与 AI 标识）",
+      "runner": "agent",
+      "gate": "封面有定稿版本；文案含原曲署名 + AI 生成 + 非商用声明",
+      "slots": [],
+      "steps": [
+        {
+          "id": "s7.cover",
+          "title": "封面（版式 × 尺寸）",
+          "outputs": [{ "kind": "glob", "pattern": "{{dirs.coverDir}}/*.jpg", "min": 1 }],
+          "acceptance": ["平台尺寸（如 B 站 1146×717）在内；定稿版本记进 cover.preset"]
+        },
+        {
+          "id": "s7.copy",
+          "title": "投稿文案",
+          "outputs": [{ "kind": "anyOf", "of": [{ "kind": "glob", "pattern": "{{dirs.dir}}/投稿文案*", "min": 1 }, { "kind": "manual" }] }],
+          "acceptance": ["与成片/封面署名同源；含 AI 生成与非商用声明"]
+        }
+      ],
+      "actions": [
+        {
+          "id": "pv.cover.plan",
+          "label": "封面预览（--plan）",
+          "kind": "preview",
+          "interpreter": "node",
+          "argv": ["scripts/86_pv_cover.mjs", "--plan"],
+          "writes": false,
+          "costCny": 0,
+          "timeoutMs": 120000
+        },
+        {
+          "id": "pv.cover",
+          "label": "封面真出（写 cover/）",
+          "kind": "local",
+          "interpreter": "node",
+          "argv": ["scripts/86_pv_cover.mjs"],
+          "writes": true,
+          "costCny": 0,
+          "timeoutMs": 600000
+        }
+      ],
+      "artifacts": ["{{dirs.coverDir}}/", "{{dirs.dir}}/投稿文案.md"],
+      "agentPrompt": "【工作台派单 · 阶段7 封面与投稿文案】歌名「{{song.name}}」，歌根 {{root}}。请按技能阶段7 出封面（多版式多尺寸，先给我看 A/B/C/D 再定稿）并写投稿文案；署名与 credits 同源，含 AI 生成与非商用声明。改产物前旧的归档到 history。"
+    }
+  ]
+}

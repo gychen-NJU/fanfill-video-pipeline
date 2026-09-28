@@ -74,7 +74,7 @@ Expected: `{ ffmpeg: '…', ffprobe: '…', source: '…', ok: true }`. **`ok: t
 node tools/smoke-test.mjs
 ```
 
-Expected: `OK: all 13 checks passed`. It builds a synthetic workspace in a temp directory, exercises the workbench's read-only snapshot route, and writes nothing into the repository.
+Expected: `OK: all 13 checks passed`. It builds a synthetic workspace in a temp directory, exercises the workbench's snapshot route (the panel's only read path), and writes nothing into the repository.
 
 If it fails, read the failing check name — it tells you which subsystem broke. Report the exact name and output; do not patch the repository to make it pass.
 
@@ -143,7 +143,11 @@ cp -r skills/fanfill-video-pipeline .agents/skills/
 
 The skill filesystem watches `.agents/skills` and picks it up **without restarting**. Verify by asking the agent to list skills — `fanfill-video-pipeline` should appear.
 
-Then follow **[INSTALL.md](INSTALL.md)** §2 for the profile-patch rows (workbench panel + agent preset). That file explains why the two absolute paths must be edited, and why the client module id must match the package name exactly.
+Then follow **[INSTALL.md](INSTALL.md)** §2 for the profile-patch rows (workbench panel + agent preset). That file explains why the two absolute paths must be edited, why the client module id must match the package name exactly, and which optional config keys feed the panel's environment probe.
+
+Two things to tell the user, because you cannot do them yourself:
+- **Restart `dsh web`** after adding the rows (host-half JS is loaded at startup; the v2 plugin is a five-file package, not a single file).
+- The panel's stage list is data: general stages in `ui-workbench/pipeline.default.json`, per-song tweaks in `<song workspace>/工作台流水线.json`. Editing the per-song file needs only a page refresh.
 
 ---
 
