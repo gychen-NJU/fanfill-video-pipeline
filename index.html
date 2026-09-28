@@ -270,13 +270,16 @@ do itself.</p>
   different synthetic song runs the shot-list stage with zero errors, honouring every config value
   (<code>tools/gensong-test.mjs</code>); read-only zones' fingerprints are identical before and after; the panel
   (v2, guided) passes two headless suites — 118 host assertions and 30 client-render assertions (both include
-  adversarial regressions) — and the repo's own smoke test still passes all 13 v1-contract assertions against it.</p>
+  adversarial regressions) — and the repo's own smoke test still passes all 13 v1-contract assertions against it.
+  The v2 panel was then exercised <em>in a real browser</em> end to end with 0 console errors: six tabs of live
+  data, a whitelisted local run, a stage handed to the agent in a newly created session, the new-song wizard,
+  and a material upload that landed on disk and wrote back into the project config.</p>
 </div>
 <div class="note warnnote">
-  <p><strong>Not verified — treat as untested:</strong> the v2 panel in a real browser (its click paths,
-  uploads and light/dark themes — the suites above drive it headlessly; the v1 panel was browser-verified
-  with 0 console errors); light/dark theme rendering of the panel (token-based by
-  inspection, only dark was screenshotted); the 2K paid path, dissolve transitions and the <code>L2VA</code> /
+  <p><strong>Not verified — treat as untested:</strong> the panel's <em>light</em> theme (token-based by
+  inspection and the dark theme renders correctly, but the reference machine's appearance is owned by a skin
+  plugin, so light could not be reached); uploading more than ~50 MB through the panel;
+  the 2K paid path, dissolve transitions and the <code>L2VA</code> /
   <code>&lt;Video N&gt;</code> prompt forms were never used; which upscaling model was actually used (no argument
   log survives).</p>
 </div>
@@ -419,11 +422,12 @@ When you finish, run \`node tools/smoke-test.mjs\` and report the result.</code>
   <p><strong>验证过：</strong>整条流水线端到端跑通并交付了成片；脚本配置化后，核验报告与分镜表<strong>逐字节复现</strong>；
   一个参数刻意不同的合成曲目能跑通分镜阶段、零报错且每个配置项都生效（<code>tools/gensong-test.mjs</code>）；
   只读保护区在整轮跑完前后内容指纹一致；工作台面板（v2·引导式）两套无头自检全过（宿主 118 条 + 客户端渲染 30 条，含对抗性回归），
-  仓库自带的自检 13 条断言在 v2 上也照样全过。</p>
+  仓库自带的自检 13 条断言在 v2 上也照样全过；v2 面板又在**真实浏览器**里端到端验了一遍（console 错误 0 条）：6 个页签实时数据、
+  一条白名单本机动作、在新建会话里把某阶段派给智能体、新建歌向导、以及从面板交素材（落盘 + 回写配置）。</p>
 </div>
 <div class="note warnnote">
-  <p><strong>没验证 —— 请当未测：</strong>v2 面板在真实浏览器里的表现（点击路径、上传、亮/暗主题；上面两套是无头自检，
-  v1 面板倒是真机验过、console 错误 0 条）；面板亮/暗主题渲染（代码层确认全走主题 token，但只截过暗色）；
+  <p><strong>没验证 —— 请当未测：</strong>面板的**亮色**主题（代码层确认全走主题 token、暗色正常，但参考机器外观被皮肤插件接管，亮色切不到）；
+  通过面板上传 &gt;50 MB 的大素材；
   2K 花钱路线、溶解转场、<code>L2VA</code> / <code>&lt;Video N&gt;</code> 这几种形态从未用过；
   超分实际用的哪个模型（没留下传参日志）。</p>
 </div>

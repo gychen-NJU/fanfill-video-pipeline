@@ -52,9 +52,12 @@ one-command rollback script exists locally.
   shot-list stage with zero errors).
 - An **independent adversarial review** (2 high / 4 medium / 10 low findings) — all fixed, each pinned by a regression
   assertion; the report ships in the authoring workspace, not this repo.
-- The v2 **client** half was rendered in a real browser: `console.error = 0`, and it degrades gracefully when the host
-  half is older. **Not** verified: the full v2 click path in a browser, and light/dark theming (the reference machine's
-  appearance is owned by a skin plugin, which blocked the light variant).
+- The v2 panel was then exercised **in a real browser, end to end** (0 console errors): six tabs of live project data,
+  a whitelisted local action run from the panel, a stage handed to the agent inside a newly created session, the
+  new-song wizard creating a real skeleton, and a material submitted through the panel (file on disk, config written
+  back behind a backup, checklist advanced). It also degrades gracefully when the host half is older.
+  **Not** verified: the panel's *light* theme (the reference machine's appearance is owned by a skin plugin, which
+  blocked the light variant) and uploading more than ~50 MB through the panel.
 
 ### Upgrading from v1.0.0
 
@@ -106,8 +109,9 @@ one-command rollback script exists locally.
 - 客户端半边：**30** 条无头渲染断言（六个页签、派单真的进了会话接口、未受信动作强制确认）；
 - `tools/smoke-test.mjs` **13/13**；`tools/gensong-test.mjs` 通过（参数刻意不同的合成曲目跑通分镜阶段、零报错）；
 - 一轮**独立对抗性核验**（2 高危 / 4 中危 / 10 低危）全部修复并钉成回归断言（报告留在作者工作区，不入本仓库）；
-- v2 的**客户端半边**在真实浏览器渲染过：`console.error = 0`，宿主旧版时优雅降级。**未验**：v2 在浏览器里的完整点击路径、
-  亮/暗主题（参考实现所在机器的外观由皮肤插件接管，亮色那一半没法切）。
+- v2 面板随后在**真实浏览器里端到端验过**（console 错误 0 条）：6 个页签实时数据、从面板跑白名单本机动作、
+  在新建会话里把某阶段派给智能体、新建歌向导建出真骨架、从面板交素材（落盘 + 备份后回写配置 + 清单推进）；
+  宿主旧版时也能优雅降级。**未验**：面板的**亮色**主题（参考机器外观被皮肤插件接管，切不到）与通过面板上传 >50 MB 的素材。
 
 ### 从 v1.0.0 升级
 
