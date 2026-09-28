@@ -130,6 +130,18 @@
   1. `fanfill-config.mjs` 的 ffmpeg 路径改成**可解析**——`FANFILL_FFMPEG_DIR` 环境变量 > `video.ffmpegDir` 配置 > 历史默认 > PATH 兜底，并打印一次提示；
   2. `82_pv_clips.mjs` 的出片驱动路径支持 `FANFILL_H3` / `video.h3Driver` 覆盖，缺失时前置报错并给出三条出路；
   3. `ui-workbench/client.js` 删掉探测期的 URL 编码兜底死码（换机器必然打不中）。
+- **泛化（用户 2026-09-28 追加要求：「删除关于我此次任务的描述，更适用于任意曲目」+「README 要中英双语、默认英文、点击热切换」）**：
+  - `README.md`（**英文默认**）+ `README.zh-CN.md`（中文完整对应）—— 本歌专名与本次任务数字全部清出 README，真实数据移入 `examples/`。
+  - **GitHub Pages 站点已上线**：<https://gychen-nju.github.io/fanfill-video-pipeline/> —— 单个 `index.html`，
+    右上角 `English | 中文` **点击热切换**（localStorage 记忆 + `?lang=` 可分享 + 首访跟随浏览器语言 + 亮暗主题）。
+    *GitHub 的 README 由服务端渲染、脚本被剥离，物理上做不到热切换，所以切换器只能放在 Pages 上。*
+  - `SKILL.md` 泛化：工具名标注为"参考实现"、去掉"本歌"指代、不再把某目录名写成固定事实。
+  - `docs/05_pv-pipeline.md` **重写为通用方法论文档**（标题不再带曲名；段号式模式分配改为按用途描述；
+    目录名改为 config 驱动；绝对路径改为占位符；真实数字保留但标注为"一次真实交付的参照"）。
+  - `docs/08_project-config-spec.md` 泛化（5 处：目录约定、`source` 示例、`video.dir` 说明、文末实例小节改为指向 `examples/`）。
+  - `docs/06_development-plan.md` **移出用户文档**：改名为 `notes/06_building-this-pipeline.md` 并加文首说明
+    —— 它是"一次开发任务的记录"，读的是方法（怎么分层、怎么先冻结契约、怎么用换歌验证证明通用），不是命令。
+  - `docs/04` 与 `docs/07` 的泛化**进行中**（子代理处理，完成后重新构建推送）。
 - **安装文档（补做）**：README 原来只有一句 Requirements 清单、没有安装步骤。
   已补 `### 0. Install`（依赖表 + Windows ffmpeg 影子版陷阱 + 一条命令自检 + **可复制给 agent 的安装指令**）
   与 `docs/BOOTSTRAP.md`（166 行 agent 侧清单：每步一个确切命令 + 期望结果 + 失败回退，

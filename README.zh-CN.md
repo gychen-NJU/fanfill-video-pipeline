@@ -239,6 +239,7 @@ fanfill-video-pipeline/
 ├── tools/                            # 复用检查（自检 + 换歌验证）
 ├── examples/                         # 一次真实运行的产物，供参照
 ├── docs/                             # 安装指南、配置规范、深入文档
+├── notes/                            # 这套流水线是怎么建起来的（背景说明，非操作指南）
 └── index.html                        # 中英双语文档站（GitHub Pages）
 ```
 

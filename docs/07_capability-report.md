@@ -1,6 +1,7 @@
 # 工作台能力探测报告（Phase 0）
 
-> **性质**：Phase 0 交付物。回答计划书 §10 Phase 0 的三个问题：能不能做、做到哪一级、契约是什么。
+> **性质**：Phase 0 交付物，也是**一次真实的探测记录**——所以文中出现的路径、插件名与数值都取自那台机器上的那次探测。**读法**：看"怎么探测"（方法、取证手段、复查清单）与"结论怎么用"（能做到哪一级、契约是什么、往哪降级），**不要照抄本机路径**；把占位符换成你自己环境的实际值即可。
+> 回答计划书 §10 Phase 0 的三个问题：能不能做、做到哪一级、契约是什么。
 > **探测时间**：2026-09-28
 > **探测方式**：读已安装的包源码与类型声明、读 shipped 预设补丁、读 profile 实际配置、用 `dsh --profile web --dump-config` 做无副作用验证。**没有靠记忆或猜测下过结论。**
 > **结论一句话**：`plugin_manager` / `cordis_inspect_*` 在本 profile 的 agent 工具面**不可用**；但**手写 profile 补丁层 + 热加载**这条路完全走得通，预设与工作台都按这条路装上了。**工作台目标级别 = L1（只读面板），且已实测数据正确。**
@@ -25,7 +26,7 @@
 ## 2. 为什么 `plugin_manager` 不可用（事实链）
 
 1. 本机 DSH 版本 `0.1.7-rc.2`（`dsh --version`）。
-2. profile = `web`（环境变量 `DSH_PROFILE=web`，`DSH_PROFILE_DIR=C:\Users\13676\.dsh\profiles\web`）。
+2. profile = `web`（环境变量 `DSH_PROFILE=web`，`DSH_PROFILE_DIR=%USERPROFILE%\.dsh\profiles\web`）。
 3. Web 面把 agent 平面整体挪进 preset：`@deepseek-ai/dsh-web-app/cordis.patch.yml` 第 444–445 行把 host 平面的 `tool-plugin-manager` `disabled: true`。
 4. shipped `presets/standard.patch.yml` 第 144–146 行又补了一刀：
    ```yaml
@@ -47,7 +48,7 @@
 ### 3.1 落点
 
 ```
-C:\Users\13676\.dsh\profiles\web\cordis.patch.yml
+$DSH_HOME/profiles/web/cordis.patch.yml
 ```
 
 该文件是 profile 自己的补丁层，**在全部 bundle 层之后应用**（文件头注释原文：*"Your patch layer for this dsh profile, applied after every bundle layer"*）。
@@ -70,10 +71,12 @@ $ dsh --profile web --dump-config     # exit 0
       name: 翻填视频工作流
       ...
 > - id: fantian-workbench
-    name: file:///E:/Videos/未来再见翻填/dev/翻填工作台/index.js
+    name: file:///<ABS>/ui-workbench/index.js
     config:
-      workspace: E:/Videos/未来再见翻填
+      workspace: '<WORKSPACE>'
 ```
+
+> 上面两处占位符按自己的环境替换：`<ABS>` = 该工作台目录的绝对路径，`<WORKSPACE>` = 它要读取的工作区绝对路径。
 
 两行都进了合成树，且**没有**新的报错（唯一一条 `entry "dsh-cron" not found` 是**改动前就存在**的历史遗留，与本次无关）。
 
@@ -176,7 +179,7 @@ Host 半边用 `ctx.webServer.register({ kind:'prefix', path:'/fantian-workbench
 
 ### 5.3 异常优先区（计划书 §7.1 的第 1 条原则）
 
-面板默认只亮出"需要你注意的"，正常项收进折叠区。当前在真实数据上实测会自动挑出 5 条：
+面板默认只亮出"需要你注意的"，正常项收进折叠区。下面这组数值来自**一次真实交付的参照数据**，用来说明面板的判定口径与量级，**不是读者必须达到的规格**。当前在该数据上实测会自动挑出 5 条：
 
 - ⚠ 3 句 LRC 时间与实测起音偏差 > 0.4s（第 6、17、24 句）
 - ⚠ 11 句实测收声短于保底 3s（第 1、3、6、7、8、9、13、14、15、19、24 句）
@@ -186,16 +189,16 @@ Host 半边用 `ctx.webServer.register({ kind:'prefix', path:'/fantian-workbench
 
 ### 5.4 实测证据（Host 半边，脱离宿主独立跑通）
 
-用 `dev\_probe\snapshot-test.mjs` 直接调用路由 handler，在**真实数据**上得到：
+用 `dev\_probe\snapshot-test.mjs` 直接调用路由 handler，在**真实数据**上得到（同为一次真实交付的参照）：
 
 ```
-ok true · song.name 未来再见 · segments 17/17 · generatedSeconds 174
+ok true · song.name <曲名> · segments 17/17 · generatedSeconds 174
 lyrics 24（超阈值 3）· materials 6/6 就绪 · promptChars 17（超限 0）
 ledger 4 笔 · total 109.5 · budget 150 · clips 17
 dirStats: prompts 34 · refs 11 · clips 17 · subs 4 · cover 8 · verify 86 · history 12
 ```
 
-全部与实际文件一致。**这是"面板数据与真实文件一致"的可复核证据**（计划书 §10 Phase 4 的验收项之一）。
+全部与实际文件一致。**这是"面板数据与真实文件一致"的可复核证据**（计划书 §10 Phase 4 的验收项之一）。数字本身是量级参照：`segments 17/17` 表示分镜表 17 段全部有对应成片，`generatedSeconds 174` 是这些成片的生成秒数合计，`lyrics 24` 是歌词句数、其中 3 句偏差超过 0.4s 阈值。
 
 ---
 
@@ -218,7 +221,7 @@ Phase 4 完成后补上了浏览器验证，**实测证据已落盘**：
 |---|---|
 | `01_boot-failed-before-fix.png` | **修复前**的失败态：白屏 + "Failed to load plugins / dsh-fantian-workbench: import failed"（真实 bug 的现场） |
 | `02_sidebar-tab-list.png` | 右侧栏页签菜单里出现「翻填工作台」 |
-| `03_panel-lyrics-tab.png` | 歌词 Tab：状态条 `未来再见 · PV 已完成交付 (17/17)`、`¥109.50 / ¥150.00`、告警区 4 条、超阈值句与保底时长不足句置顶 |
+| `03_panel-lyrics-tab.png` | 歌词 Tab：状态条 `<曲名> · PV 已完成交付 (17/17)`、`¥109.50 / ¥150.00`、告警区 4 条、超阈值句与保底时长不足句置顶（金额与"17/17"均为一次真实交付的参照） |
 | `04_panel-shoot-tab.png` | 出片 Tab：17 行分镜表（段号/区间/生成秒/模式/素材/单段成本/状态） |
 
 **这次实测顺手抓到并修掉了一个真 bug**：Client 半边最初注册的模块 id 写成 `fantian-workbench`，
@@ -259,14 +262,14 @@ Phase 4 完成后补上了浏览器验证，**实测证据已落盘**：
 
 ```powershell
 # 1) 语法
-node --check "E:\Videos\未来再见翻填\dev\翻填工作台\index.js"
-node --check "E:\Videos\未来再见翻填\dev\翻填工作台\client.js"
+node --check ui-workbench/index.js
+node --check ui-workbench/client.js
 
 # 2) 补丁层能合成（无副作用）
 dsh --profile web --dump-config | Select-String "fantian"
 
 # 3) Host 半边在真实数据上不炸
-node "E:\Videos\未来再见翻填\dev\_probe\snapshot-test.mjs"
+node tools/smoke-test.mjs
 
 # 4) 重启 dsh web，然后：
 #    - 新建会话 → 预设列表应出现「翻填视频工作流」

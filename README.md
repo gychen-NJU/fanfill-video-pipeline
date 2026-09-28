@@ -239,6 +239,7 @@ fanfill-video-pipeline/
 ├── tools/                            # reuse checks (smoke + cross-song genericity)
 ├── examples/                         # artefacts from ONE real run, for reference
 ├── docs/                             # install guide, config spec, deep dives
+├── notes/                            # how this pipeline was built (background, not a guide)
 └── index.html                        # bilingual docs site (GitHub Pages)
 ```
 

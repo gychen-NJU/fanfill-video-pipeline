@@ -1,42 +1,42 @@
 # 04 · MiniMax H3 视频生成工作流（DSH 实测版）
 
-> 建立：2026-09-27　|　环境：Win11 + Node 24.16.0 + DSH　|　**实测出片证据：任务 `446283055206708`**
+> 建立：2026-09-27　|　环境：Win11 + Node 24.16.0 + DSH　|　**实测出片证据：任务 `446283055206708`**（一次真实交付的参照）
 > 关联：[03_Gate0_验收报告.md](./03_Gate0_验收报告.md)　工具：[tools/minimax-h3/h3.mjs](../tools/minimax-h3/h3.mjs)
 
 ---
 
 ## 0. 一句话结论
 
-**H3 已经上线官方 API，不需要 RunningHub 之类的中间平台。** 本工作区已内置零依赖驱动脚本 `tools\minimax-h3\h3.mjs`，2026-09-27 实测全链路跑通：提交 → 轮询 → 下载 → 校验，**5 秒 768P 出片耗时 111 秒、实付 ¥2.50**。
+**H3 已经上线官方 API，不需要 RunningHub 之类的中间平台。** 本仓库内置零依赖驱动脚本 `tools\minimax-h3\h3.mjs`，2026-09-27 实测全链路跑通：提交 → 轮询 → 下载 → 校验，**5 秒 768P 出片耗时 111 秒、实付 ¥2.50**（一次真实交付的参照）。
 
-顺手回答了你的两个原始疑问：
+先回答接入前最常见的两个疑问：
 
-| 你问的 | 答案 |
+| 常见疑问 | 答案 |
 | --- | --- |
-| "自己查到的都是 runninghub 等平台上的工作台" | 那些是**转卖/代理**。官方 API 直连更便宜、更完整，且能脚本化 |
+| "查到的都是 runninghub 等平台上的工作台" | 那些是**转卖/代理**。官方 API 直连更便宜、更完整，且能脚本化 |
 | "或许 MiniMax Hub 可以？" | **Hub 是真实存在的官方产品**，但它是**桌面客户端**（已改名 MiniMax Design），**不提供 API/CLI/MCP**，DSH 驱动不了它 —— 只能人手点。详见 §1.2 |
 
 ---
 
-## 1. 先把你搜到的东西理顺
+## 1. 先把检索到的信息理顺
 
-### 1.1 为什么你搜到的都是"平台工作台"
+### 1.1 为什么搜到的都是"平台工作台"
 
 H3 的能力（多模态参考 + 原生音频）在第三方平台上通常被包成"云 ComfyUI 工作流"，所以搜索结果全是工作台。但同一模型，**官方 API 是源头**，各家只是转卖：
 
 | 平台 | H3 的精确 model / 端点 | 计费 | 是否必须跑对方工作台 |
 | --- | --- | --- | --- |
 | **MiniMax 官方（推荐）** | `MiniMax-H3` / `MiniMax-H3-Max`，`POST /v2/video_generation` | **¥0.50/s（768P）、¥0.80/s（2K）** | 否，纯 REST |
-| RunningHub（你搜到的） | `POST /openapi/v2/minimax/hailuo-h3/text-to-video` | ¥0.48/s（768P）、¥0.77/s（2K） | 模型 API 不必；工作流玩法需其云端。**标准模型 API 要企业级-共享 Key** |
+| RunningHub（最常见的搜索结果） | `POST /openapi/v2/minimax/hailuo-h3/text-to-video` | ¥0.48/s（768P）、¥0.77/s（2K） | 模型 API 不必；工作流玩法需其云端。**标准模型 API 要企业级-共享 Key** |
 | fal.ai | `minimax/h3/*`、`minimax/h3-max/*` | $0.05–0.16/s | 否（H3 Max 是 fal 跟 MiniMax 联合后训练的） |
 | Replicate | `minimax/h3` | $0.08/s（768P） | 否 |
 | 阿里云百炼 | `MiniMax/MiniMax-H3` | 同官方刊例 | 否 |
 | ComfyUI 官方节点 | `MinimaxHailuo03*`（Max/Turbo 实为 fal 代理） | H3 768p $0.1287/s（比官方贵） | 否；本地节点另可用开源权重 |
 | OpenRouter / 硅基流动 / 火山方舟 | **未上架** | — | — |
 
-> 结论：**用官方 API**。第三方只在"你没有官方 key"或"要用 fal 的 LoRA/特效端点"时才有意义。
+> 结论：**用官方 API**。第三方只在"没有官方 key"或"要用 fal 的 LoRA/特效端点"时才有意义。
 
-### 1.2 MiniMax Hub 到底是什么（你的猜测对了一半）
+### 1.2 MiniMax Hub 到底是什么（"Hub 能出片"这个猜测对了一半）
 
 | 项 | 事实 |
 | --- | --- |
@@ -48,15 +48,15 @@ H3 的能力（多模态参考 + 原生音频）在第三方平台上通常被�
 | 支持 Windows 吗 | Windows 10+ **x64**（ARM 不支持）；安装包 381 MB |
 | **能被 DSH 驱动吗** | **不能。** 没有任何面向外部的 API key / CLI / MCP 入口；SDK 层面它就是人手操作的 GUI |
 
-> 所以：Hub/Design 适合**手动试片、比稿**；要自动化/批量/接进流水线，走 API（本文档 §4）。
+> 所以：Hub/Design 适合**手动试片、比稿**；要自动化、批量或接进流水线，一律走 API（本文档 §4）。
 
 ---
 
 ## 2. 三条通路对比
 
-| | **A. 本仓库 `h3.mjs`**（推荐） | B. 官方 CLI `mmx-cli` | C. Hub / MiniMax Design |
+| | **A. 本仓库驱动脚本 `h3.mjs`**（推荐） | B. 官方 CLI `mmx-cli` | C. Hub / MiniMax Design |
 | --- | --- | --- | --- |
-| DSH 可自动调用 | ✅ 命令行直接调 | ✅ | ❌ 只能人点 |
+| 可被 agent / 脚本自动调用 | ✅ 命令行直接调 | ✅ | ❌ 只能人点 |
 | 分辨率可选 | ✅ 768P / 2K / 480P | ❌ **恒发 2K，没有 `--resolution`** | ✅ |
 | H3-Max 可用 | ✅ | ❌ v1.0.26 会错落到 V1 端点 | ✅ |
 | Context-IR 提示词增强 | ✅ | ❌ 无此子命令 | 内部自动 |
@@ -65,23 +65,23 @@ H3 的能力（多模态参考 + 原生音频）在第三方平台上通常被�
 | 成本预估/上限保护 | ✅ `--max-cost` | ❌ | ❌ |
 | 额外安装 | 无（零依赖 Node） | `npm i -g mmx-cli`（33 包 / 37 MB） | 381 MB 桌面端 |
 
-**CLI 装在**：`E:\Videos\未来再见翻填\tools\minimax-h3\cli\node_modules\mmx-cli`（工作区本地安装，**没占 C 盘**），bin 是 `tools\minimax-h3\cli\node_modules\.bin\mmx.cmd`。
+**CLI 装在**：**你自己工作区**下的 `<workdir>/tools/minimax-h3/cli/node_modules/mmx-cli`（工作区本地安装，未装全局、不在 PATH），bin 是 `tools/minimax-h3/cli/node_modules/.bin/mmx.cmd`（POSIX 下为同目录的 `mmx`）。
 
 ---
 
-## 3. 实测证据（2026-09-27）
+## 3. 实测证据（2026-09-27，一次真实交付的参照）
 
 ### 3.1 出片链路
 
 ```
 命令: node tools\minimax-h3\h3.mjs run --model MiniMax-H3 \
-        --prompt-file 10_h3video\prompts\mv_test_01.txt \
+        --prompt-file 10_video\prompts\<NN>_<slug>.txt \
         --duration 5 --resolution 768P --ratio 16:9 --out ... --max-cost 5 --yes
 
 11:43:43  已提交任务 task_id=446283055206708
 11:43:44  状态：running
 11:45:35  状态：succeeded  （用时 111.1s）
-11:45:37  已保存 0.79 MB → 10_h3video\out\未来再见_MV测试_H3_768P_5s.mp4
+11:45:37  已保存 0.79 MB → 10_video\out\<slug>_H3_768P_5s.mp4
 ```
 
 ### 3.2 产物技术核验（ffprobe 原文）
@@ -110,8 +110,8 @@ H3 的能力（多模态参考 + 原生音频）在第三方平台上通常被�
 
 ### 3.4 抽帧
 
-`10_h3video\out\frames\` 下 0.5s / 2.5s / 4.5s 三帧。画面与 prompt 高度吻合（银发少女、水手服、提灯、海边石阶、沙滩篝火余烬）。
-**但要如实说**：2.5s 与 4.5s 两帧差异偏小 —— 说明我那条 prompt 里"抬灯"这个动作幅度写得不够显式，H3 更多是做了缓慢推镜。**这是 prompt 写法问题，不是工具问题**，改进见 §5.4。
+`10_video\out\frames\` 下取 0.5s / 2.5s / 4.5s 三帧，抽帧核对**画面与 prompt 是否吻合**。
+**但要如实说**：该次交付里 2.5s 与 4.5s 两帧的差异偏小 —— 说明那条 prompt 里关键动作的幅度写得不够显式，H3 更多是做了缓慢推镜。**这是 prompt 写法问题，不是工具问题**，改进见 §5.4。
 
 ---
 
@@ -119,7 +119,7 @@ H3 的能力（多模态参考 + 原生音频）在第三方平台上通常被�
 
 ### 4.1 凭据
 
-Key 已存在 `C:\Users\13676\.dsh\.credentials.yaml` 的 `MINIMAX_API_KEY`（`sk-api…`，**中国区按量付费 key**）。脚本按 `--key` → `MINIMAX_API_KEY` 环境变量 → `~/.mmx/config.json` → `~/.dsh/.credentials.yaml` 顺序自动查找，**无需把 key 写进任何脚本或命令行**。
+Key 存放在 `~/.dsh/.credentials.yaml` 的 `MINIMAX_API_KEY`（`sk-api…`，**中国区按量付费 key**）。脚本按 `--key` → `MINIMAX_API_KEY` 环境变量 → `~/.mmx/config.json` → `~/.dsh/.credentials.yaml` 顺序自动查找，**无需把 key 写进任何脚本或命令行**。
 
 ### 4.2 常用命令
 
@@ -127,28 +127,28 @@ Key 已存在 `C:\Users\13676\.dsh\.credentials.yaml` 的 `MINIMAX_API_KEY`（`s
 $H = "tools\minimax-h3\h3.mjs"
 
 # ① 文生视频（最常用）：提交→轮询→下载 一步到位
-node $H run --prompt-file 10_h3video\prompts\mv_test_01.txt `
+node $H run --prompt-file 10_video\prompts\<NN>_<slug>.txt `
   --duration 5 --resolution 768P --ratio 16:9 `
-  --out-dir 10_h3video\out --max-cost 5 --yes
+  --out-dir 10_video\out --max-cost 5 --yes
 
 # ② 先估费（不发请求，不花钱）
 node $H estimate --model MiniMax-H3 --resolution 768P --duration 10
 
 # ③ 首帧图生视频（宽高比由图片决定，ratio 自动 adaptive）
-node $H run --prompt-file p.txt --image 01_input\CG\月下1.png --duration 6 --resolution 2K --yes
+node $H run --prompt-file p.txt --image 01_input\<参考图>.png --duration 6 --resolution 2K --yes
 
 # ④ 首尾帧（图与图之间的连续运动）
 node $H run --prompt-file p.txt --image first.png --last-frame last.png --duration 8 --yes
 
 # ⑤ 多模态参考（角色一致性：参考图+参考视频+参考音频，≤9图/3视频/3音频）
-node $H run --prompt-file p.txt --ref-image 01_input\CG\月下1.png `
+node $H run --prompt-file p.txt --ref-image 01_input\<参考图>.png `
   --ref-video motion.mp4 --ref-audio rhythm.mp3 --duration 10 --yes
 
 # ⑥ 粗糙想法 → 官方结构 prompt（H3-Context-IR，按 token 计费，很便宜）
-node $H context-ir --prompt "女孩在海边提着灯回望" --duration 5 --out 10_h3video\prompts\enhanced.txt
+node $H context-ir --prompt "女孩在海边提着灯回望" --duration 5 --out 10_video\prompts\enhanced.txt
 
 # ⑦ 768P 成片 → 2K 再生成
-node $H regenerate --source-task-id 446283055206708 --out 10_h3video\out\232_2K.mp4
+node $H regenerate --source-task-id <task_id> --out 10_video\out\<NN>_2K.mp4
 
 # ⑧ 任务管理
 node $H list --size 10
@@ -206,21 +206,21 @@ non_diegetic_music: 只有观众能听到的配乐：乐器 + 速度 + 节奏 + 
 | FL2VA（首尾帧） | `How the reference pictures align with the target video — Picture 1 (from Shot 1) aligns with the 0.00-second mark ...; Picture 2 (from Shot N) aligns with the S.SS-second mark ...` |
 | L2VA（尾帧） | `How the reference pictures align with the target video — <Picture 1> (from [Shot N]) aligns with the S.SS-second mark of the target video.` |
 
-完整的 H3 提示词写作规范在本机技能里：`C:\Users\13676\.agents\skills\h3-prompt-writing\references\base-en.txt`（含 Ref2VA 六段式）。
+完整的 H3 提示词写作规范见 `h3-prompt-writing` 技能的 `references/base-en.txt`（技能装在 `~/.agents/skills/h3-prompt-writing/`，含 Ref2VA 六段式）。
 
-### 5.4 本次实测用的 prompt（可直接当模板改）
+### 5.4 一次真实交付中使用的 prompt（可直接当模板改）
 
-见 `10_h3video\prompts\mv_test_01.txt`，全文如下：
+见 `10_video\prompts\<NN>_<slug>.txt`，全文如下：
 
 ```text
-integrated_multimodal_description: [Shot 1] 2D-animated, cinematic anime film style, a medium shot frames a girl with long silver-white hair and a white-and-dark-blue summer uniform standing alone on wet stone steps at the edge of the sea just after sunset, holding a small paper lantern in both hands. She is still at first, looking down at the unlit lantern; the camera pushes in with small amplitude at slow speed as she slowly lifts her head toward the horizon. A single flame catches inside the lantern and warm light moves across her face, her hair, and the damp stone under her feet; far behind her on the beach a low bonfire burns and its embers drift upward into the dark sky. She says quietly: <d>[Chinese] 未来再见。</d> The sea breeze lifts the hem of her skirt and the lantern flame steadies as she raises the lantern slightly higher in the final moment.
+integrated_multimodal_description: [Shot 1] 2D-animated, cinematic anime film style, a medium shot frames a girl with long silver-white hair and a white-and-dark-blue summer uniform standing alone on wet stone steps at the edge of the sea just after sunset, holding a small paper lantern in both hands. She is still at first, looking down at the unlit lantern; the camera pushes in with small amplitude at slow speed as she slowly lifts her head toward the horizon. A single flame catches inside the lantern and warm light moves across her face, her hair, and the damp stone under her feet; far behind her on the beach a low bonfire burns and its embers drift upward into the dark sky. She says quietly: <d>[Chinese] <台词>。</d> The sea breeze lifts the hem of her skirt and the lantern flame steadies as she raises the lantern slightly higher in the final moment.
 
 overall_soundscape: Gentle sea waves break against the stone steps while wind moves through her hair and clothing. The lantern's paper crinkles softly, a small flame pops into life, and her shoes shift on the wet stone. A distant bonfire crackles from the beach below.
 
 non_diegetic_music: A slow solo piano figure with sustained warm string pads underneath, joined near the end by a single low cello note that swells slightly as the lantern lights, then fades.
 ```
 
-**下次改进点**（针对"动作幅度偏小"）：
+**可复用的改进点**（针对"动作幅度偏小"这一类问题）：
 1. 把动作拆成**带时序的节拍**：`At 00:01.200 she lowers her chin… At 00:02.800 she raises the lantern to eye level… At 00:04.000 her lips part and she says…`
 2. 加**可观察的结果**："火焰在她瞳孔里的倒影变大"这类能落到像素上的描述。
 3. 若必须保证某个动作，**用首帧/尾帧图把两端钉死**（FL2VA），让模型只能走中间路径。
@@ -256,7 +256,7 @@ non_diegetic_music: A slow solo piano figure with sustained warm string pads und
 
 | # | 坑 | 现象 / 处置 |
 | --- | --- | --- |
-| 1 | **H3 必须用"按量付费"key** | Token Plan 订阅 key / OAuth 都不行，会报 2013。本机那把 `sk-api…` 正是按量付费，✅ 实测可用 |
+| 1 | **H3 必须用"按量付费"key** | Token Plan 订阅 key / OAuth 都不行，会报 2013。用来跑通的那把 `sk-api…` 正是按量付费类型，✅ 实测可用 |
 | 2 | **区域不通** | 同一把 key 打国际站 `api.minimax.io` → `invalid api key`；打国内站 `api.minimaxi.com` → 正常。**国内 key 只能打国内域名** |
 | 3 | 官方 CLI 无法选分辨率 | 恒 2K。想省钱用 `h3.mjs` |
 | 4 | 两代 API 状态枚举不通用 | V2 全小写 `queued/running/succeeded/failed/cancelled`；V1 是 `Preparing/Queueing/Processing/Success/Fail` |
@@ -271,7 +271,7 @@ non_diegetic_music: A slow solo piano figure with sustained warm string pads und
 
 ## 8. 原生工具接入（已接通：DSH MCP）
 
-**H3 现在就是 DSH 里的原生工具**（2026-09-27 实测上线），工具名前缀 `mcp__h3__`：
+**H3 现在就是 DSH 里的原生工具**（2026-09-27 实测上线，一次真实交付的参照），工具名前缀 `mcp__h3__`：
 
 | 工具 | 作用 |
 | --- | --- |
@@ -290,14 +290,14 @@ non_diegetic_music: A slow solo piano figure with sustained warm string pads und
 ### 8.2 实现要点
 
 - 服务器：`tools/minimax-h3/mcp-server/minimax-h3-mcp.mjs`，基于官方 `@modelcontextprotocol/server` v2（2026-07-28 规范）的 `serveStdio`。**不重写任何 API 逻辑，全部复用 `h3.mjs`**（单一事实源）。
-- **异步设计**：MCP 单次请求默认超时 **60 秒**（`DEFAULT_REQUEST_TIMEOUT_MSEC`），而一次 5 秒出片实测要 111 秒 → `generate` 只提交、立刻返回 task_id，由 `h3_fetch_result` 分次轮询（单次上限 50 秒）。
-- **金额保护**：预估超上限且未确认 → **提交前**直接拒绝，零扣费（实测 15s@2K = ¥12 的请求被拒）。
+- **异步设计**：MCP 单次请求默认超时 **60 秒**（`DEFAULT_REQUEST_TIMEOUT_MSEC`），而一次 5 秒出片实测要 111 秒（一次真实交付的参照）→ `generate` 只提交、立刻返回 task_id，由 `h3_fetch_result` 分次轮询（单次上限 50 秒）。
+- **金额保护**：预估超上限且未确认 → **提交前**直接拒绝，零扣费（一次真实交付里 15s@2K = ¥12 的请求被拒）。
 - **密钥不入配置文件**：服务器自行从 `~/.dsh/.credentials.yaml` 读取（DSH 的 MCP stdio 客户端还会按 `/KEY|PASSWORD|SECRET|TOKEN/` 清洗环境变量，所以也不该靠 env 传）。
 - **stdout 纪律**：MCP 的 stdout 是 JSON-RPC 协议通道，服务器所有诊断信息一律走 stderr —— 为此把 `h3.mjs` 的日志输出也改到了 stderr，并让每个命令在 `--output json` 时只向 stdout 吐纯 JSON。
 
 ### 8.3 注册方式
 
-写进 profile 补丁层 `C:\Users\13676\.dsh\profiles\web\cordis.patch.yml`：
+写进 profile 补丁层 `$DSH_HOME/profiles/<profile>/cordis.patch.yml`（Windows 上即 `C:\Users\<你>\.dsh\profiles\web\cordis.patch.yml`）：
 
 ```yaml
 - insert:
@@ -307,10 +307,12 @@ non_diegetic_music: A slow solo piano figure with sustained warm string pads und
         serverName: h3
         transport: stdio
         command: node
-        args: ['E:/Videos/未来再见翻填/tools/minimax-h3/mcp-server/minimax-h3-mcp.mjs']
-        cwd: 'E:/Videos/未来再见翻填'
+        args: ['<WORKSPACE>/tools/minimax-h3/mcp-server/minimax-h3-mcp.mjs']
+        cwd: '<WORKSPACE>'
         failOnStartupError: false
 ```
+
+> 把上例中的 `<WORKSPACE>` 换成**你的工作区绝对路径**（Windows 下写 `E:/path/to/workspace` 这种正斜杠形式最稳）。
 
 - 改动前的原文件已备份至 `tools/minimax-h3/backups/`。
 - 补丁 YAML 结构可用 `node tools/minimax-h3/check-profile-patch.mjs` 校验。
@@ -318,9 +320,9 @@ non_diegetic_music: A slow solo piano figure with sustained warm string pads und
 
 ## 9. 下一步可选项
 
-1. **是否再挂官方 `minimax-mcp-js`**：可补 TTS（30+ 中文音色）、文生图、声音克隆、音色设计（共 9 个工具），但**视频只有旧的 Hailuo-02**；且它默认 host 是老的 `api.minimax.chat` 域名，需先确认这把国内 key 能否使用。
+1. **是否再挂官方 `minimax-mcp-js`**：可补 TTS（30+ 中文音色）、文生图、声音克隆、音色设计（共 9 个工具），但**视频只有旧的 Hailuo-02**；且它默认 host 是老的 `api.minimax.chat` 域名，需先确认国内区 key 能否使用。
 2. **装 MiniMax Design（原 Hub）桌面端** → 手动试片/比稿用，有 3 次免费 H3。
-3. **接进本项目的 MV 流水线** → 用 `09_aceproject` 里已定稿的人声 + 本工具出画，再合轨。
+3. **接进本仓库的 PV 流水线** → 用已定稿的人声轨（例如 ACE Studio 工程导出的成品）+ 本工具出画，再合轨。
 
 ---
 
@@ -335,9 +337,9 @@ non_diegetic_music: A slow solo piano figure with sustained warm string pads und
 | `tools\minimax-h3\backups\` | 改动 DSH profile 前的配置备份 |
 | `tools\minimax-h3\cli\` | 官方 CLI `mmx-cli@1.0.26`（工作区本地安装） |
 | `tools\minimax-h3\mcp-js\` | 官方 `minimax-mcp-js@0.0.18`（**已核实不含 H3**，暂未挂载） |
-| `10_h3video\prompts\mv_test_01.txt` | 本次实测 prompt（模板） |
-| `10_h3video\out\未来再见_MV测试_H3_768P_5s.mp4` | **实测成片**（5.17s / 1344×768 / 含音频） |
-| `10_h3video\out\未来再见_MV测试_H3_768P_5s.json` | 任务元数据（task_id / usage / 费用 / 链接） |
-| `10_h3video\out\frames\` | 抽帧 0.5s / 2.5s / 4.5s |
+| `10_video\prompts\<NN>_<slug>.txt` | 一次真实交付用的 prompt（模板） |
+| `10_video\out\<slug>_H3_768P_5s.mp4` | **实测成片**（一次真实交付的参照：5.17s / 1344×768 / 含音频） |
+| `10_video\out\<slug>_H3_768P_5s.json` | 任务元数据（task_id / usage / 费用 / 链接） |
+| `10_video\out\frames\` | 抽帧 0.5s / 2.5s / 4.5s |
 
-> **非破坏性说明**：本次只新增文件，未改动 `01_input`、`02_stems`、`09_aceproject` 里任何既有素材。成片下载与本地产物命名冲突时脚本会自动加 `-2`/`-3` 后缀，**永不覆盖**。
+> **非破坏性说明**：本工具只新增文件，不覆盖既有素材；成片下载与本地产物命名冲突时脚本会自动加 `-2`/`-3` 后缀，**永不覆盖同名文件**。
