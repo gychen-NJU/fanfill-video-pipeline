@@ -98,7 +98,7 @@
 |---|---|---|---|---|
 | 1 | **技能**「翻填视频流水线」 | ✅ | [.agents/skills/fanfill-video-pipeline/](../.agents/skills/fanfill-video-pipeline/) | `SKILL.md` + [references/](../.agents/skills/fanfill-video-pipeline/references/)（01–08 共 8 份）；进度文档与目录约定为强制条款。**已在活体会话里被 `skill` 工具列出并成功加载**（技能名 `fanfill-video-pipeline`） |
 | 2 | 脚本配置化（`80–87`） | ✅ | [scripts/](../scripts/) | 新增 [lib/fanfill-config.mjs](../scripts/lib/fanfill-config.mjs)（配置读取 / 参数解析 / `--plan` / ffprobe JSON / 非覆盖命名）；**8 支脚本全部读配置 + 全部支持 `--plan`，残留本歌硬编码 0 处**。回归：`80` 重跑**逐字节一致**（17 段 / 边界 / 174s / ¥87.00 / 歌词时间轴 CSV）；`85` 重跑报告**除时间戳外逐字节一致**；`83` 两次实跑 4 个字幕文件 **sha256 相同**；另用探针副本验证 `81` 参考图 11/11、`86` 封面 8/8 逐字节相同。细节见 [改动报告](../dev/_probe/改动报告_20260928.md) |
-| 3 | 预设「翻填视频工作流」 | 🔄 | [dev/翻填工作流预设/](../dev/翻填工作流预设/) | 已装上（`preset-fantian-video`，persona 写死开场加载技能与硬纪律）；`dsh --profile web --dump-config` 确认合成树含该行且无新报错。**未验收（需用户操作）**：新建会话选该预设是否技能在场、`mcp__h3__*` 可用 —— 现有进程的会话是在改动前建的，选不到新预设，**重启 `dsh web` 后请点一次** |
+| 3 | 预设「翻填视频工作流」 | ✅ | [dev/翻填工作流预设/](../dev/翻填工作流预设/) | **已在 Web GUI 实测可加载**（2026-09-28）：设置 → Agent 预设 里「翻填视频工作流」不再显示红角标，`broken` 为空。**曾踩坑并修复**：漏写 `plan-mode` 的必填 `config.section` 导致整行激活失败、预设被标「加载失败」——`dsh --dump-config` 查不出来（它只验语法与合成）。排查方法与可复用脚本见下 |
 | 4 | 工作台（Web UI 插件） | ✅ | [dev/翻填工作台/](../dev/翻填工作台/) | **已在真实 GUI 里截图验收**（证据 [dev/_probe/gui-verify/](../dev/_probe/gui-verify/)）：右侧栏出现「翻填工作台」页签，5 个 Tab（歌词/素材/清单/出片/账本）全部渲染真实数据，逐个切换采集 **console.error = 0 条**；样式逐条核对全部走 `--dsw-*` 主题 token。亮/暗主题只做了代码层核对、**未实际切亮色截图**，见 [07_工作台能力探测报告.md](../00_docs/07_工作台能力探测报告.md) §6 |
 | 5 | **进度文档** | ✅ | 本文件 | 覆盖全阶段、产物路径可点击、含操作日志与账本 |
 | 6 | 端到端回归 | ✅ | [dev/_probe/final-audit.mjs](../dev/_probe/final-audit.mjs) | **DoD + 非破坏性核验 28 项全过、0 失败**；换歌验证通过（见下） |
@@ -157,6 +157,18 @@
 
 ### 本次修掉的问题（都有据可查）
 
+- **预设「加载失败」（2026-09-28 用户报的，已修）**：Web UI 上那张卡带红色「加载失败」角标。
+  真因：我写预设时**只抄了 `plan-mode` 的 `name`、漏掉了它的必填 `config.section`**
+  （shipped 预设里那段 2339 字的 plan 模式行为准则），
+  插件校验抛 `PlanModeConfig needs a non-empty 'section'` → 整行激活失败 → preset row 被标 broken。
+  **`dsh --dump-config` 查不出来**——它只验证语法与合成，不验证每行 config 能过插件校验。
+  权威诊断在 `@deepseek-ai/dsh-agent-preset-registry` 的 row `broken` 字段，**只有 Web GUI 会显示**：
+  设置 → Agent 预设 → hover 红角标看原因；等价做法是在已登录页面执行
+  `[...document.querySelectorAll('[class*=brokenTip]')].map(e=>e.textContent)`。
+  已从 shipped 预设**逐字**取回那段 section 填进 profile 补丁与 `dev/翻填工作流预设/`，
+  改完 **GUI 立刻重读（无需重启）**，5 个预设现全部可加载。
+  **固化脚本**：[dev/_probe/check-preset-health.mjs](../dev/_probe/check-preset-health.mjs)（静态体检"包有必填 config 但我没写"+ 打印权威检查步骤）、
+  [dev/_probe/read-preset-broken.mjs](../dev/_probe/read-preset-broken.mjs)（从 GUI 抓 broken 原因）。
 - **工作台白屏（真实 bug，已修）**：Client 半边第一次注册的模块 id 写成了 `fantian-workbench`，
   而 boot 校验要求它**逐字等于** `package.json` 的 `name` → 整批插件加载失败、页面白屏。
   改为 `dsh-fantian-workbench` 后刷新即正常。
