@@ -117,6 +117,26 @@
 
 脚本：[dev/_probe/gensong-test.mjs](../dev/_probe/gensong-test.mjs)。
 
+### 开源发布：`fanfill-video-pipeline`
+
+把「可复用的那一半」抽成独立仓库并推到 GitHub：**https://github.com/gychen-NJU/fanfill-video-pipeline**（public，47 个文件 / 663 KB，`master` @ `9537ef7`）。
+
+- **做法**：不直接在工作区 `git init`（那里有 12.6 GB cache + 6.3 GB venvs + 2.1 GB 产物 + 244 MB 截图，一次失误就提交出几百 MB），而是用
+  [dev/_probe/stage-repo.mjs](../dev/_probe/stage-repo.mjs) **复制**到一个干净 staging 目录再发布——工作区原文件零改动。
+- **带走**：技能（9 文件）、PV 脚本（10）、出片驱动 + MCP server（4）、工作台插件（4）、预设（2）、文档（6，含新写的英文 `INSTALL.md`）、`examples/`（8，只放文本：配置/进度/台账/成本/对齐/核验/分镜/文案）、自检工具（2）、英文 `README.md`。
+- **没带走**：任何音频/视频/图片。`01_input`/`02_stems`/`09_aceproject`/`music` 与全部成片都留在本地——它们是第三方二创素材，不适合入库。
+- **体格检查（已做）**：无明文密钥、无媒体文件、无 >200KB 文件（最大 42 KB）、`client.js` 模块 id 与包名一致、无机器专属死码。
+- **发布前的可移植性修补**（3 处，都同步回本工作区）：
+  1. `fanfill-config.mjs` 的 ffmpeg 路径改成**可解析**——`FANFILL_FFMPEG_DIR` 环境变量 > `video.ffmpegDir` 配置 > 历史默认 > PATH 兜底，并打印一次提示；
+  2. `82_pv_clips.mjs` 的出片驱动路径支持 `FANFILL_H3` / `video.h3Driver` 覆盖，缺失时前置报错并给出三条出路；
+  3. `ui-workbench/client.js` 删掉探测期的 URL 编码兜底死码（换机器必然打不中）。
+- **顺手抓到一个真 bug（已修）**：工作台 Host 半边对 `video.*Dir` 直接取配置值，
+  而规范 §4.1 说这些字段**可省略**、缺省应按 `<video.dir>/<子目录>` 推导。
+  结果：只写 `video.dir` 的最小配置下，`promptDir`/`refDir`/… 全部解析成 `undefined`
+  → 面板「产物目录规模」与「prompt 字符数自检」**静默显示 0**（看起来像没产物，其实有）。
+  已加 `videoDir()` 兜底；仓库里新写的 `tools/smoke-test.mjs` 会在合成工作区上复现并守住这条
+  （13 项自检全过）。
+
 ### 本次修掉的问题（都有据可查）
 
 - **工作台白屏（真实 bug，已修）**：Client 半边第一次注册的模块 id 写成了 `fantian-workbench`，
