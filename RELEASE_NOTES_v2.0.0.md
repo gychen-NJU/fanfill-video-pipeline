@@ -44,7 +44,7 @@ one-command rollback script exists locally.
 
 ### Verification (what is actually proven)
 
-- Host half: **117** headless assertions (uploads, traversal including junctions, optimistic lock, paid-action
+- Host half: **118** headless assertions (uploads, traversal including junctions, optimistic lock, paid-action
   refusal, job tree-kill, concurrency cap, v1 contract regression, adversarial regressions).
 - Client half: **30** headless render assertions (six tabs, hand-off really reaches the session interface,
   untrusted actions force the confirm dialog).
@@ -102,7 +102,7 @@ one-command rollback script exists locally.
 
 ### 验证（到底证明了什么）
 
-- 宿主半边：**117** 条无头断言（上传、穿越含 junction、乐观锁、付费拒绝、作业树杀、并发上限、v1 契约回归、对抗性回归）；
+- 宿主半边：**118** 条无头断言（上传、穿越含 junction、乐观锁、付费拒绝、作业树杀、并发上限、v1 契约回归、对抗性回归）；
 - 客户端半边：**30** 条无头渲染断言（六个页签、派单真的进了会话接口、未受信动作强制确认）；
 - `tools/smoke-test.mjs` **13/13**；`tools/gensong-test.mjs` 通过（参数刻意不同的合成曲目跑通分镜阶段、零报错）；
 - 一轮**独立对抗性核验**（2 高危 / 4 中危 / 10 低危）全部修复并钉成回归断言（报告留在作者工作区，不入本仓库）；
