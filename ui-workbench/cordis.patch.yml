@@ -1,0 +1,8 @@
+# 翻填工作台 —— workspace bundle 补丁
+#
+# 两行：Host 半边（只读快照路由）+ Client 半边（右侧栏面板）。
+# Host 行从 `process.cwd()` 推导工作区；dsh web 通常从工作区启动，
+# 若不符则用 profile 补丁层里的 override 显式指定 workspace。
+- insert:
+    - id: fantian-workbench
+      name: 'dsh-fantian-workbench'

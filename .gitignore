@@ -1,0 +1,51 @@
+# 工作区产物：这个仓库只带「可复用的那一半」，不带任何素材或成片。
+# 你在自己的工作区里跑出来的东西都会被忽略。
+
+# —— 素材与产物（含第三方版权内容，绝不入库）——
+01_input/
+02_stems/
+03_midi/
+04_lyrics/
+05_vocals/
+06_svc/
+07_mix/
+08_release/
+09_aceproject/
+10_video/
+10_h3video/
+music/
+cache/
+models/
+venvs/
+tools/minimax-h3/cli/
+tools/upscale/
+
+# —— 运行期状态与账目 ——
+_进度/
+**/history/
+**/.tmp/
+**/.up/
+**/.norm/
+
+# —— 媒体文件（本仓库正文里没有媒体，所以不存在误伤）——
+*.wav
+*.mp3
+*.mp4
+*.mov
+*.jpg
+*.jpeg
+*.png
+*.webp
+
+# —— 别把密钥带进来 ——
+.credentials.yaml
+.env
+.env.*
+
+# —— 系统与编辑器 ——
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+node_modules/

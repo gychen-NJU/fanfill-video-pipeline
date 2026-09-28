@@ -1,0 +1,202 @@
+# 翻填视频工作流 —— Agent 预设声明
+#
+# 承载方式：这是一个 **workspace bundle**（package.json + 本文件）。
+# 它只声明「预设」这一行；安装方式是把它插进 profile 的补丁层
+# （`$DSH_HOME/profiles/<profile>/cordis.patch.yml`），因为本机该 profile
+# 的 agent 工具面里没有暴露 `plugin_manager`（详见 00_docs/07_工作台能力探测报告.md）。
+#
+# 行内的插件包名**全部核对过** `cordis-composition-reference/references/packages.md`
+# 与 shipped `presets/cordis.patch.yml` / `presets/standard.patch.yml`，不是凭记忆写的。
+#
+# 设计口径（与 shipped `cordis` 预设的差异，逐条都有理由）：
+#   1. persona 改为「翻填视频工作流」执行者 + 六条硬纪律（软激活技能，见 §6.3 的 MVP 方案）
+#   2. 保留完整工具面：shell / fs / search / jobs / web / todo / present / ask-user
+#   3. 保留并行编排授权：subagent(+fork) / workflow —— 项目 AGENTS.md 长期授权主动并行
+#   4. skill-filesystem 显式声明 customSkillDirs，把「翻填视频流水线」钉死在目录约定上
+#   5. 挂上 **翻填工作台** 面板（同目录发布的 client 插件）
+#   6. 成本纪律写进 persona，而不是靠工具拦
+
+- insert:
+    - id: preset-fantian-video
+      name: '@deepseek-ai/dsh-agent-preset'
+      config:
+        id: fantian-video
+        name: 翻填视频工作流
+        description: 从「原曲 + 翻填词」到音乐成品与 PV 成片的完整流水线：技能自动在场、H3 出片可用、翻填工作台可见、成本与版权纪律生效。
+        order: 20
+        plugins:
+          # ── 身份与纪律 ────────────────────────────────────────────────────
+          - id: persona
+            name: '@deepseek-ai/dsh-persona'
+            config:
+              suffix: Your working directory is {{cwd}}.
+              prefix: |-
+                你是「翻填视频工作流」的执行者，负责把一首歌的「原曲 + 翻填词」做成
+                【音乐成品 + PV 成片 + 封面 + 投稿文案】。工作区根 = {{cwd}}。
+
+                **开工第一件事**：调用 `skill` 工具加载技能「翻填视频流水线」，
+                然后严格按它的 SOP、阶段清单与边界执行。不要凭记忆做这条线。
+
+                读技能之后紧接着读：`{{cwd}}/_进度/进度.md`（断点在哪）
+                与 `{{cwd}}/翻填项目.json`（脚本的唯一参数来源）。从断点续做，不要从头重来。
+
+                ## 六条硬纪律（违反即返工）
+
+                1. **非破坏性**：`01_input` / `02_stems` / `09_aceproject` / `music` 里的既有素材
+                   一律**不删不改**。新产物只新增；命名冲突加 `-2`/`-3`；替换旧产物前先归档到
+                   `<historyDir>/<时间戳>/` 并写 README。绝不覆盖。
+                2. **成本**：任何真实 API 调用（H3 出片、图像生成）前，**先报预估费用、拿授权**，
+                   再用 `--max-cost` / `maxCostCny` 兜底，并把每笔花费追加到 `_进度/成本台账.csv`。
+                   用户已给**一次总授权**——**不要逐步确认**（"不要太多瓶颈"），
+                   只在预估会突破 `budget.totalCny` 时停下来问。
+                3. **质量型验收**：用户说"更清晰/更好听/更贴合"这类需求时，必须做**同帧/同段 1:1 对比**，
+                   不能拿"参数达标"交差。验收全绿 ≠ 目标达成。
+                4. **交付节奏**：给用户**绝对路径**并**停下来等他检查**，不要自己一路往下跑到花完钱。
+                5. **每批操作结束追加写** `_进度/进度.md`（单一入口、不重写历史、产物写可点击路径）。
+                6. **本地免费优先**：本机算力能解决的（超分、分离、混音）不花 API 钱。
+
+                ## 并行编排（本项目长期授权）
+
+                按需自行使用 `subagent` / `subagent_fork` / `workflow` 并行推进，无需用户点名。
+                纪律：同一文件同一时间只有一个写者；**花钱的并行由你统一控账，不把付费权下放**；
+                链式依赖（下一段要用上一段末帧）必须串行。
+
+                ## 环境要点（Windows）
+
+                - 优先写 `.mjs` 文件；**不要用 `node -e` 内联脚本**（会被 PowerShell 5.1 吃掉）。
+                - 真 ffmpeg 用全路径 `E:\software\FFmpeg\ffmpeg-8.1.1-essentials_build\bin`。
+                - 中文 prompt 一律写进 `.txt` 文件传给工具，不要走命令行参数。
+                - 中文/空格路径优先经 `E:\vsf` junction（已指向工作区）。
+
+          - id: agent-instructions
+            name: '@deepseek-ai/dsh-agent-instructions'
+            config:
+              maxBytes: 65536
+
+          # ── shell 与文件 ───────────────────────────────────────────────────
+          - id: tool-bash
+            name: '@deepseek-ai/dsh-tool-bash'
+            disabled: !!js process.platform === 'win32'
+          - id: tool-pwsh
+            name: '@deepseek-ai/dsh-tool-pwsh'
+            disabled: !!js process.platform !== 'win32'
+          - id: tool-fs
+            name: '@deepseek-ai/dsh-tool-fs'
+          - id: tool-fs-search
+            name: '@deepseek-ai/dsh-tool-fs-search'
+            config:
+              sampleOverCapGlobResults: false
+          - id: tool-jobs
+            name: '@deepseek-ai/dsh-tool-jobs'
+
+          # ── 技能：本地发现 + 目录钉死 ──────────────────────────────────────
+          # 本项目技能装在 <工作区>\.agents\skills（rank 200：projectRoot/.agents/skills，
+          # 一层深、Chokidar 监视、装进去即生效）。除 projectRoot 外再钉一个显式目录，
+          # 用来放**跨歌共享**的技能；用 `!!js` 而非模板变量，因为配置值不保证做 {{}} 插值。
+          - id: skill-filesystem
+            name: '@deepseek-ai/dsh-skill-filesystem'
+            config:
+              customSkillDirs:
+                - !!js process.getBuiltinModule('node:path').join(process.cwd(), 'dev/shared/skills')
+          - id: tool-skill
+            name: '@deepseek-ai/dsh-tool-skill'
+
+          # ── 会话控制 ──────────────────────────────────────────────────────
+          - id: command-goal
+            name: '@deepseek-ai/dsh-command-goal'
+          - id: tool-goal
+            name: '@deepseek-ai/dsh-tool-goal'
+          - id: planning
+            name: cordis:group
+            group: true
+            isolate:
+              planMode: true
+            config:
+              - id: plan-mode
+                name: '@deepseek-ai/dsh-plan-mode'
+          - id: compaction
+            name: cordis:group
+            group: true
+            isolate:
+              compaction: true
+              toolResultPruner: true
+            config:
+              - id: compaction-basic
+                name: '@deepseek-ai/dsh-compaction-basic'
+              - id: command-compact
+                name: '@deepseek-ai/dsh-command-compact'
+              - id: tool-result-pruner
+                name: '@deepseek-ai/dsh-compaction-tool-result-pruner'
+                config:
+                  thresholdChars: 8192
+                  headChars: 4096
+                  tailChars: 1024
+
+          # ── 并行编排（项目长期授权）────────────────────────────────────────
+          - id: delegation
+            name: cordis:group
+            group: true
+            isolate:
+              workflowEngine: true
+            config:
+              - id: tool-subagent-control
+                name: '@deepseek-ai/dsh-tool-subagent-control'
+              - id: tool-subagent-list-agents
+                name: '@deepseek-ai/dsh-tool-subagent-control/list-agents'
+              - id: tool-subagent
+                name: '@deepseek-ai/dsh-tool-subagent'
+                config:
+                  provider: spawn
+                  toolName: subagent
+                  modelSelectionSettings: true
+                  backgroundMode: continuable
+              - id: tool-subagent-fork
+                name: '@deepseek-ai/dsh-tool-subagent'
+                config:
+                  provider: fork
+                  toolName: subagent_fork
+                  backgroundMode: continuable
+              - id: tool-subagent-codex
+                name: '@deepseek-ai/dsh-tool-subagent'
+                config:
+                  provider: codex
+                  toolName: subagent_codex
+                  backgroundMode: one-shot
+                  maxDepth: provider-managed
+              - id: workflow-ptc
+                name: '@deepseek-ai/dsh-workflow-ptc'
+                config:
+                  provider: spawn
+              - id: tool-workflow
+                name: '@deepseek-ai/dsh-tool-workflow'
+
+          # ── 交互与联网 ────────────────────────────────────────────────────
+          - id: tool-ask-user
+            name: '@deepseek-ai/dsh-tool-ask-user'
+          - id: tool-todo
+            name: '@deepseek-ai/dsh-tool-todo'
+            config:
+              allowParallelInProgress: true
+          - id: tool-web
+            name: '@deepseek-ai/dsh-tool-web'
+            config:
+              fetch: true
+              searchTimeoutMs: 60000
+          - id: present
+            name: '@deepseek-ai/dsh-tool-present'
+
+          # ── H3 出片（MCP 客户端在本 profile 的补丁层已挂，id=minimax-h3-mcp）──
+          # 这里不再重复声明，避免同名 MCP 服务器二次注册冲突。
+          # 可用工具：mcp__h3__h3_estimate_cost / h3_generate_video / h3_fetch_result …
+
+          # ── 翻填工作台（Host 平面已挂，见 profile 补丁层 id=fantian-workbench）──
+          # 工作台故意**不**在本预设里再声明一次：它在 host 平面注册只读快照路由与
+          # 右侧栏面板，属于 profile 级能力——这样任何预设（包括默认 standard）下都能
+          # 打开面板看进度。在这里重复声明会导致同名路由二次注册而抛错。
+
+          # ── 宿主侧排障工具面（shipped cordis 预设同款；profile 未提供时自动禁用）──
+          - id: tool-cordis
+            name: '@deepseek-ai/dsh-tool-cordis'
+          - id: tool-plugin-manager
+            name: '@deepseek-ai/dsh-plugin-manager/tools'
+            disabled: !!js "!ctx.get('profileContext')"

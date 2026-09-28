@@ -1,0 +1,15 @@
+{
+  "name": "@local/dsh-fantian-preset",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "meta": {
+    "title": "翻填视频工作流",
+    "description": "从「原曲 + 翻填词」到音乐成品与 PV 成片的完整流水线：自动在场「翻填视频流水线」技能、H3 出片工具、翻填工作台面板与成本纪律。"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}

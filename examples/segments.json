@@ -1,0 +1,838 @@
+{
+  "model": "MiniMax-H3",
+  "resolution": "768P",
+  "pricePerSecond": 0.5,
+  "audio": {
+    "file": "09_aceproject/初调/翻填.wav",
+    "duration": 165.86
+  },
+  "vocal": {
+    "file": "09_aceproject/初调/翻填.Vocals.wav"
+  },
+  "lrc": {
+    "file": "music/陶典_hanser-未来再见-翻填.lrc",
+    "credits": [
+      {
+        "t": 0,
+        "text": "未来再见 - 陶典/hanser/花玲/爆裂菊是也/林簌/Mace"
+      },
+      {
+        "t": 4.36,
+        "text": "词：冥凰"
+      },
+      {
+        "t": 8.72,
+        "text": "曲：Luna Safari"
+      },
+      {
+        "t": 13.08,
+        "text": "编曲：Luna Safari"
+      },
+      {
+        "t": 17.44,
+        "text": "母带：郭川"
+      },
+      {
+        "t": 21.81,
+        "text": "混音：Luna Safari"
+      },
+      {
+        "t": 26.17,
+        "text": "制作人：Luna Safari"
+      }
+    ],
+    "lyrics": [
+      {
+        "t": 30.53,
+        "text": "故事闯入夏天",
+        "nominalEnd": 33.65,
+        "onset": 30.36,
+        "dev": -0.17,
+        "onsetLevel": -58.944,
+        "vocalEnd": 33.3
+      },
+      {
+        "t": 33.65,
+        "text": "在我最好年华中回响",
+        "nominalEnd": 42.48,
+        "onset": 33.82,
+        "dev": 0.17,
+        "onsetLevel": -37.373,
+        "vocalEnd": 39.06
+      },
+      {
+        "t": 42.48,
+        "text": "看少女的成长",
+        "nominalEnd": 45.99,
+        "onset": 42.52,
+        "dev": 0.04,
+        "onsetLevel": -62.077,
+        "vocalEnd": 45.5
+      },
+      {
+        "t": 45.99,
+        "text": "陪伴我把岁月走成温暖",
+        "nominalEnd": 50.49,
+        "onset": 46.14,
+        "dev": 0.15,
+        "onsetLevel": -34.466,
+        "vocalEnd": 56.16
+      },
+      {
+        "t": 50.49,
+        "text": "为了美好而战",
+        "nominalEnd": 54.2,
+        "onset": 50.74,
+        "dev": 0.25,
+        "onsetLevel": -36.178,
+        "vocalEnd": 56.16
+      },
+      {
+        "t": 54.2,
+        "text": "未曾想如若就此擦肩",
+        "nominalEnd": 59.97,
+        "onset": 53.42,
+        "dev": -0.78,
+        "onsetLevel": -29.665,
+        "vocalEnd": 56.16
+      },
+      {
+        "t": 59.97,
+        "text": "会是此生错过最大的遗憾",
+        "nominalEnd": 66.15,
+        "onset": 59.94,
+        "dev": -0.03,
+        "onsetLevel": -43.397,
+        "vocalEnd": 62
+      },
+      {
+        "t": 66.15,
+        "text": "会一直记得薪炎永燃",
+        "nominalEnd": 71.96,
+        "onset": 66.54,
+        "dev": 0.39,
+        "onsetLevel": -38.286,
+        "vocalEnd": 68.54
+      },
+      {
+        "t": 71.96,
+        "text": "愿世上的美好都如愿绽放",
+        "nominalEnd": 78.4,
+        "onset": 71.84,
+        "dev": -0.12,
+        "onsetLevel": -39.211,
+        "vocalEnd": 73.26
+      },
+      {
+        "t": 78.4,
+        "text": "哪怕有一天 泪花盛开",
+        "nominalEnd": 81.58,
+        "onset": 78.08,
+        "dev": -0.32,
+        "onsetLevel": -22.909,
+        "vocalEnd": 81.4
+      },
+      {
+        "t": 81.58,
+        "text": "和你约定 别说再见",
+        "nominalEnd": 84.67,
+        "onset": 81.54,
+        "dev": -0.04,
+        "onsetLevel": -33.097,
+        "vocalEnd": 90.64
+      },
+      {
+        "t": 84.67,
+        "text": "携愿的灯 星消的夜",
+        "nominalEnd": 87.67,
+        "onset": 84.62,
+        "dev": -0.05,
+        "onsetLevel": -30.317,
+        "vocalEnd": 90.64
+      },
+      {
+        "t": 87.67,
+        "text": "太多眷恋 如何忘却",
+        "nominalEnd": 90.82,
+        "onset": 87.72,
+        "dev": 0.05,
+        "onsetLevel": -31.77,
+        "vocalEnd": 90.64
+      },
+      {
+        "t": 90.82,
+        "text": "一如往昔 镌刻心间",
+        "nominalEnd": 93.88,
+        "onset": 90.88,
+        "dev": 0.06,
+        "onsetLevel": -22.786,
+        "vocalEnd": 93.78
+      },
+      {
+        "t": 93.88,
+        "text": "亦如未来 前路仍远",
+        "nominalEnd": 97,
+        "onset": 94.02,
+        "dev": 0.14,
+        "onsetLevel": -26.196,
+        "vocalEnd": 96.96
+      },
+      {
+        "t": 97,
+        "text": "梦醒啦 别再沉湎 寻梦向前",
+        "nominalEnd": 127.25,
+        "onset": 97.28,
+        "dev": 0.28,
+        "onsetLevel": -37.21,
+        "vocalEnd": 103.32
+      },
+      {
+        "t": 127.25,
+        "text": "哪怕有一天 泪花盛开",
+        "nominalEnd": 130.7,
+        "onset": 126.68,
+        "dev": -0.57,
+        "onsetLevel": -54.347,
+        "vocalEnd": 130.64
+      },
+      {
+        "t": 130.7,
+        "text": "和你约定 未来再见",
+        "nominalEnd": 133.84,
+        "onset": 130.88,
+        "dev": 0.18,
+        "onsetLevel": -23.85,
+        "vocalEnd": 136.74
+      },
+      {
+        "t": 133.84,
+        "text": "仲夏的梦 红月的夜",
+        "nominalEnd": 136.92,
+        "onset": 133.82,
+        "dev": -0.02,
+        "onsetLevel": -34.349,
+        "vocalEnd": 136.74
+      },
+      {
+        "t": 136.92,
+        "text": "太多感谢 如何忘却",
+        "nominalEnd": 140.02,
+        "onset": 137.02,
+        "dev": 0.1,
+        "onsetLevel": -30.807,
+        "vocalEnd": 146.24
+      },
+      {
+        "t": 140.02,
+        "text": "终章不终 故事未完",
+        "nominalEnd": 143.04,
+        "onset": 140.04,
+        "dev": 0.02,
+        "onsetLevel": -25.347,
+        "vocalEnd": 146.24
+      },
+      {
+        "t": 143.04,
+        "text": "序章又续 陪伴亦然",
+        "nominalEnd": 146.21,
+        "onset": 143.08,
+        "dev": 0.04,
+        "onsetLevel": -29.417,
+        "vocalEnd": 146.24
+      },
+      {
+        "t": 146.21,
+        "text": "向前吧 走向前吧",
+        "nominalEnd": 149.17,
+        "onset": 146.46,
+        "dev": 0.25,
+        "onsetLevel": -39.041,
+        "vocalEnd": 152.34
+      },
+      {
+        "t": 149.17,
+        "text": "往日画面 难忘永远",
+        "nominalEnd": null,
+        "onset": 149.98,
+        "dev": 0.81,
+        "onsetLevel": -22.599,
+        "vocalEnd": 152.34
+      }
+    ]
+  },
+  "vads": [
+    {
+      "text": "故事闯入夏天",
+      "lrc": 30.53,
+      "onset": 30.36,
+      "dev": -0.17,
+      "sungEnd": 33.3
+    },
+    {
+      "text": "在我最好年华中回响",
+      "lrc": 33.65,
+      "onset": 33.82,
+      "dev": 0.17,
+      "sungEnd": 39.06
+    },
+    {
+      "text": "看少女的成长",
+      "lrc": 42.48,
+      "onset": 42.52,
+      "dev": 0.04,
+      "sungEnd": 45.5
+    },
+    {
+      "text": "陪伴我把岁月走成温暖",
+      "lrc": 45.99,
+      "onset": 46.14,
+      "dev": 0.15,
+      "sungEnd": 56.16
+    },
+    {
+      "text": "为了美好而战",
+      "lrc": 50.49,
+      "onset": 50.74,
+      "dev": 0.25,
+      "sungEnd": 56.16
+    },
+    {
+      "text": "未曾想如若就此擦肩",
+      "lrc": 54.2,
+      "onset": 53.42,
+      "dev": -0.78,
+      "sungEnd": 56.16
+    },
+    {
+      "text": "会是此生错过最大的遗憾",
+      "lrc": 59.97,
+      "onset": 59.94,
+      "dev": -0.03,
+      "sungEnd": 62
+    },
+    {
+      "text": "会一直记得薪炎永燃",
+      "lrc": 66.15,
+      "onset": 66.54,
+      "dev": 0.39,
+      "sungEnd": 68.54
+    },
+    {
+      "text": "愿世上的美好都如愿绽放",
+      "lrc": 71.96,
+      "onset": 71.84,
+      "dev": -0.12,
+      "sungEnd": 73.26
+    },
+    {
+      "text": "哪怕有一天 泪花盛开",
+      "lrc": 78.4,
+      "onset": 78.08,
+      "dev": -0.32,
+      "sungEnd": 81.4
+    },
+    {
+      "text": "和你约定 别说再见",
+      "lrc": 81.58,
+      "onset": 81.54,
+      "dev": -0.04,
+      "sungEnd": 90.64
+    },
+    {
+      "text": "携愿的灯 星消的夜",
+      "lrc": 84.67,
+      "onset": 84.62,
+      "dev": -0.05,
+      "sungEnd": 90.64
+    },
+    {
+      "text": "太多眷恋 如何忘却",
+      "lrc": 87.67,
+      "onset": 87.72,
+      "dev": 0.05,
+      "sungEnd": 90.64
+    },
+    {
+      "text": "一如往昔 镌刻心间",
+      "lrc": 90.82,
+      "onset": 90.88,
+      "dev": 0.06,
+      "sungEnd": 93.78
+    },
+    {
+      "text": "亦如未来 前路仍远",
+      "lrc": 93.88,
+      "onset": 94.02,
+      "dev": 0.14,
+      "sungEnd": 96.96
+    },
+    {
+      "text": "梦醒啦 别再沉湎 寻梦向前",
+      "lrc": 97,
+      "onset": 97.28,
+      "dev": 0.28,
+      "sungEnd": 103.32
+    },
+    {
+      "text": "哪怕有一天 泪花盛开",
+      "lrc": 127.25,
+      "onset": 126.68,
+      "dev": -0.57,
+      "sungEnd": 130.64
+    },
+    {
+      "text": "和你约定 未来再见",
+      "lrc": 130.7,
+      "onset": 130.88,
+      "dev": 0.18,
+      "sungEnd": 136.74
+    },
+    {
+      "text": "仲夏的梦 红月的夜",
+      "lrc": 133.84,
+      "onset": 133.82,
+      "dev": -0.02,
+      "sungEnd": 136.74
+    },
+    {
+      "text": "太多感谢 如何忘却",
+      "lrc": 136.92,
+      "onset": 137.02,
+      "dev": 0.1,
+      "sungEnd": 146.24
+    },
+    {
+      "text": "终章不终 故事未完",
+      "lrc": 140.02,
+      "onset": 140.04,
+      "dev": 0.02,
+      "sungEnd": 146.24
+    },
+    {
+      "text": "序章又续 陪伴亦然",
+      "lrc": 143.04,
+      "onset": 143.08,
+      "dev": 0.04,
+      "sungEnd": 146.24
+    },
+    {
+      "text": "向前吧 走向前吧",
+      "lrc": 146.21,
+      "onset": 146.46,
+      "dev": 0.25,
+      "sungEnd": 152.34
+    },
+    {
+      "text": "往日画面 难忘永远",
+      "lrc": 149.17,
+      "onset": 149.98,
+      "dev": 0.81,
+      "sungEnd": 152.34
+    }
+  ],
+  "envelope": {
+    "percentile": {
+      "p10": -50.063659727607266,
+      "p25": -34.98777516340343,
+      "p50": -24.95236265354558,
+      "p75": -23.093519777623584,
+      "p90": -21.46644178123475,
+      "p97": -20.319722183024282
+    },
+    "note": "人声轨 8kHz 单声道 RMS，20ms/帧，±100ms 平滑"
+  },
+  "segments": [
+    {
+      "idx": 1,
+      "slug": "intro_title",
+      "start": 0,
+      "end": 10.2,
+      "dur": 10.2,
+      "genDur": 11,
+      "mode": "Ref2VA",
+      "mat": "星海绘卷.png",
+      "mat2": "",
+      "trans": "cut",
+      "note": "前奏·曲名卡（文字由 ASS 叠加）",
+      "refs": [
+        "ref_10th.jpg"
+      ],
+      "chainFrom": null,
+      "lyrics": [],
+      "lyricTimes": []
+    },
+    {
+      "idx": 2,
+      "slug": "intro_origin",
+      "start": 10.2,
+      "end": 20.4,
+      "dur": 10.2,
+      "genDur": 11,
+      "mode": "I2VA",
+      "mat": "然后向着明天.png",
+      "mat2": "",
+      "trans": "xfade",
+      "note": "前奏·原曲信息卡",
+      "refs": [],
+      "chainFrom": 1,
+      "lyrics": [],
+      "lyricTimes": []
+    },
+    {
+      "idx": 3,
+      "slug": "intro_credits",
+      "start": 20.4,
+      "end": 30.53,
+      "dur": 10.13,
+      "genDur": 11,
+      "mode": "I2VA",
+      "mat": "六周年.png",
+      "mat2": "2023新春.png",
+      "trans": "xfade",
+      "note": "前奏·制作/工具署名卡",
+      "refs": [],
+      "chainFrom": 2,
+      "lyrics": [],
+      "lyricTimes": []
+    },
+    {
+      "idx": 4,
+      "slug": "v1_story",
+      "start": 30.53,
+      "end": 42.48,
+      "dur": 11.95,
+      "genDur": 12,
+      "mode": "Ref2VA",
+      "mat": "德丽莎2022生日.png",
+      "mat2": "",
+      "trans": "cut",
+      "note": "故事闯入夏天／在我最好年华中回响",
+      "refs": [
+        "ref_德丽莎2022生日.jpg"
+      ],
+      "chainFrom": null,
+      "lyrics": [
+        "故事闯入夏天",
+        "在我最好年华中回响"
+      ],
+      "lyricTimes": [
+        30.53,
+        33.65
+      ]
+    },
+    {
+      "idx": 5,
+      "slug": "v1_growth",
+      "start": 42.48,
+      "end": 54.2,
+      "dur": 11.72,
+      "genDur": 12,
+      "mode": "FL2VA",
+      "mat": "星海绘卷.png",
+      "mat2": "然后向着明天.png",
+      "trans": "xfade",
+      "note": "★指定：星海绘卷→然后向着明天 的成长转化",
+      "refs": [
+        "ref_星海绘卷.jpg",
+        "ref_然后向着明天.jpg"
+      ],
+      "chainFrom": null,
+      "lyrics": [
+        "看少女的成长",
+        "陪伴我把岁月走成温暖",
+        "为了美好而战"
+      ],
+      "lyricTimes": [
+        42.48,
+        45.99,
+        50.49
+      ]
+    },
+    {
+      "idx": 6,
+      "slug": "v1_miss",
+      "start": 54.2,
+      "end": 66.15,
+      "dur": 11.95,
+      "genDur": 12,
+      "mode": "Ref2VA",
+      "mat": "屏幕截图(321).png",
+      "mat2": "屏幕截图(323).png",
+      "trans": "cut",
+      "note": "擦肩／最大的遗憾",
+      "refs": [
+        "ref_ElysianRealm.jpg"
+      ],
+      "chainFrom": null,
+      "lyrics": [
+        "未曾想如若就此擦肩",
+        "会是此生错过最大的遗憾"
+      ],
+      "lyricTimes": [
+        54.2,
+        59.97
+      ]
+    },
+    {
+      "idx": 7,
+      "slug": "v1_xinyan",
+      "start": 66.15,
+      "end": 71.96,
+      "dur": 5.81,
+      "genDur": 6,
+      "mode": "I2VA",
+      "mat": "薪火传承.png",
+      "mat2": "",
+      "trans": "cut",
+      "note": "★指定：薪炎永燃",
+      "refs": [
+        "ref_薪火传承.jpg"
+      ],
+      "chainFrom": null,
+      "lyrics": [
+        "会一直记得薪炎永燃"
+      ],
+      "lyricTimes": [
+        66.15
+      ]
+    },
+    {
+      "idx": 8,
+      "slug": "c1_bloom",
+      "start": 71.96,
+      "end": 84.67,
+      "dur": 12.71,
+      "genDur": 13,
+      "mode": "Ref2VA",
+      "mat": "星海绘卷.png",
+      "mat2": "",
+      "trans": "xfade",
+      "note": "愿美好如愿绽放／泪花盛开／别说再见",
+      "refs": [
+        "ref_星海绘卷.jpg"
+      ],
+      "chainFrom": null,
+      "lyrics": [
+        "愿世上的美好都如愿绽放",
+        "哪怕有一天 泪花盛开",
+        "和你约定 别说再见"
+      ],
+      "lyricTimes": [
+        71.96,
+        78.4,
+        81.58
+      ]
+    },
+    {
+      "idx": 9,
+      "slug": "c1_lantern",
+      "start": 84.67,
+      "end": 90.82,
+      "dur": 6.15,
+      "genDur": 7,
+      "mode": "Ref2VA",
+      "mat": "屏幕截图(115).png",
+      "mat2": "",
+      "trans": "cut",
+      "note": "★指定：携愿的灯 星消的夜（提灯夜景）",
+      "refs": [
+        "ref_屏幕截图(115).jpg"
+      ],
+      "chainFrom": null,
+      "lyrics": [
+        "携愿的灯 星消的夜",
+        "太多眷恋 如何忘却"
+      ],
+      "lyricTimes": [
+        84.67,
+        87.67
+      ]
+    },
+    {
+      "idx": 10,
+      "slug": "c1_heart",
+      "start": 90.82,
+      "end": 97,
+      "dur": 6.18,
+      "genDur": 7,
+      "mode": "Ref2VA",
+      "mat": "屏幕截图(163).png",
+      "mat2": "",
+      "trans": "cut",
+      "note": "一如往昔／亦如未来（接 115 的第二镜）",
+      "refs": [
+        "ref_屏幕截图(163).jpg"
+      ],
+      "chainFrom": null,
+      "lyrics": [
+        "一如往昔 镌刻心间",
+        "亦如未来 前路仍远"
+      ],
+      "lyricTimes": [
+        90.82,
+        93.88
+      ]
+    },
+    {
+      "idx": 11,
+      "slug": "bridge_wake",
+      "start": 97,
+      "end": 107.25,
+      "dur": 10.25,
+      "genDur": 11,
+      "mode": "Ref2VA",
+      "mat": "然后向着明天.png",
+      "mat2": "",
+      "trans": "xfade",
+      "note": "梦醒啦 别再沉湎 寻梦向前",
+      "refs": [
+        "ref_然后向着明天.jpg"
+      ],
+      "chainFrom": null,
+      "lyrics": [
+        "梦醒啦 别再沉湎 寻梦向前"
+      ],
+      "lyricTimes": [
+        97
+      ]
+    },
+    {
+      "idx": 12,
+      "slug": "inter_a",
+      "start": 107.25,
+      "end": 117.25,
+      "dur": 10,
+      "genDur": 10,
+      "mode": "I2VA",
+      "mat": "(上一段末帧)",
+      "mat2": "",
+      "trans": "cut",
+      "note": "间奏 A（链式衔接）",
+      "refs": [],
+      "chainFrom": 11,
+      "lyrics": [],
+      "lyricTimes": []
+    },
+    {
+      "idx": 13,
+      "slug": "inter_b",
+      "start": 117.25,
+      "end": 127.25,
+      "dur": 10,
+      "genDur": 10,
+      "mode": "I2VA",
+      "mat": "(上一段末帧)",
+      "mat2": "",
+      "trans": "cut",
+      "note": "间奏 B（链式衔接）",
+      "refs": [],
+      "chainFrom": 12,
+      "lyrics": [],
+      "lyricTimes": []
+    },
+    {
+      "idx": 14,
+      "slug": "c2_moon",
+      "start": 127.25,
+      "end": 136.92,
+      "dur": 9.67,
+      "genDur": 10,
+      "mode": "Ref2VA",
+      "mat": "月下1.png",
+      "mat2": "",
+      "trans": "cut",
+      "note": "★指定：仲夏的梦 红月的夜（红月夜景）",
+      "refs": [
+        "ref_月下1.jpg"
+      ],
+      "chainFrom": null,
+      "lyrics": [
+        "哪怕有一天 泪花盛开",
+        "和你约定 未来再见",
+        "仲夏的梦 红月的夜"
+      ],
+      "lyricTimes": [
+        127.25,
+        130.7,
+        133.84
+      ]
+    },
+    {
+      "idx": 15,
+      "slug": "c2_thanks",
+      "start": 136.92,
+      "end": 149.17,
+      "dur": 12.25,
+      "genDur": 13,
+      "mode": "Ref2VA",
+      "mat": "月下3.jpg",
+      "mat2": "",
+      "trans": "cut",
+      "note": "太多感谢／终章不终／向前吧（接 月下1 的第二镜）",
+      "refs": [
+        "ref_月下3.jpg"
+      ],
+      "chainFrom": null,
+      "lyrics": [
+        "太多感谢 如何忘却",
+        "终章不终 故事未完",
+        "序章又续 陪伴亦然",
+        "向前吧 走向前吧"
+      ],
+      "lyricTimes": [
+        136.92,
+        140.02,
+        143.04,
+        146.21
+      ]
+    },
+    {
+      "idx": 16,
+      "slug": "out_replay",
+      "start": 149.17,
+      "end": 159.5,
+      "dur": 10.33,
+      "genDur": 11,
+      "mode": "Ref2VA",
+      "mat": "星海绘卷.png",
+      "mat2": "",
+      "trans": "xfade",
+      "note": "往日画面 难忘永远",
+      "refs": [
+        "ref_星海绘卷.jpg"
+      ],
+      "chainFrom": null,
+      "lyrics": [
+        "往日画面 难忘永远"
+      ],
+      "lyricTimes": [
+        149.17
+      ]
+    },
+    {
+      "idx": 17,
+      "slug": "out_credits",
+      "start": 159.5,
+      "end": 165.86,
+      "dur": 6.36,
+      "genDur": 7,
+      "mode": "Ref2VA",
+      "mat": "然后向着明天.png",
+      "mat2": "",
+      "trans": "xfade",
+      "note": "尾奏·片尾署名（落在静音段）",
+      "refs": [
+        "ref_然后向着明天.jpg"
+      ],
+      "chainFrom": null,
+      "lyrics": [],
+      "lyricTimes": []
+    }
+  ],
+  "totals": {
+    "generatedSeconds": 174,
+    "estimatedCny": 87
+  },
+  "problems": [],
+  "modeNote": "mode 是创作约定；实跑模式由 prompts/ref2va/<NN>_<slug>.txt 是否存在决定（见 82_pv_clips.mjs promptPathFor）"
+}

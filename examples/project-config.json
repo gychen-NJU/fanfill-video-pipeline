@@ -1,0 +1,198 @@
+{
+  "$schema": "./dev/翻填项目.schema.json",
+  "schema": 1,
+  "song": {
+    "name": "未来再见",
+    "source": "崩坏3《女武神的餐桌Ⅱ》第八话插曲",
+    "lrc": "music/陶典_hanser-未来再见-翻填.lrc",
+    "bpm": 156,
+    "totalSec": 165.86,
+    "fps": 24
+  },
+  "audio": {
+    "reference": "music/陶典 _ hanser _ 花玲 _ 爆裂菊是也 _ 林簌 _ Mace - 未来再见.mp3",
+    "referenceLocal": "01_input/原曲.mp3",
+    "instrumental": "02_stems/song_(Instrumental)_model_bs_roformer_ep_317_sdr_12.wav",
+    "stemsVocals": "02_stems/song_(Vocals)_model_bs_roformer_ep_317_sdr_12.wav",
+    "aceVocal": "09_aceproject/初调/翻填.Vocals.wav",
+    "master": "09_aceproject/初调/翻填.wav",
+    "separation": "python-audio-separator",
+    "separationModel": "bs_roformer_ep_317_sdr_12",
+    "voice": {
+      "target": "德丽莎",
+      "engine": "ace-studio",
+      "svcModelDir": "06_svc",
+      "notes": "本次成品人声由 ACE Studio 中文声库直接渲染（09_aceproject/初调/翻填.Vocals.wav）；DDSP-SVC 换音色链路已备好但未用于最终成品"
+    },
+    "loudness": {
+      "iLufs": -14,
+      "toleranceLufs": 1,
+      "truePeakDbtp": -1
+    }
+  },
+  "video": {
+    "dir": "10_h3video",
+    "planDir": "10_h3video/pv/plan",
+    "promptDir": "10_h3video/pv/prompts",
+    "refDir": "10_h3video/pv/refs",
+    "clipDir": "10_h3video/pv/clips",
+    "subDir": "10_h3video/pv/subs",
+    "coverDir": "10_h3video/pv/cover",
+    "verifyDir": "10_h3video/pv/verify",
+    "historyDir": "10_h3video/pv/history",
+    "cgDir": "01_input/CG",
+    "delogo": [
+      {
+        "anchor": "top-left",
+        "x": 0.005,
+        "y": 0.008,
+        "w": 0.145,
+        "h": 0.105,
+        "note": "左上角「崩坏3」logo；x/y/w/h 均为源图宽高的比例（top-left：x/y 是左/上边距）。1920×1080 源上等价 x=10,y=9,w=278,h=113"
+      },
+      {
+        "anchor": "bottom-right",
+        "x": 0.004,
+        "y": 0.008,
+        "w": 0.3,
+        "h": 0.1,
+        "note": "右下角「崩坏3」logo；bottom-right 时 x/y 是右/下边距。1067×600 源（10th.jpg / ElysianRealm.png）上等价 x=743,y=535,w=320,h=60"
+      }
+    ],
+    "mandated": [
+      {
+        "sec": 48,
+        "segIdx": 5,
+        "note": "要求4.1 星海绘卷→然后向着明天 的成长转化"
+      },
+      {
+        "sec": 68,
+        "segIdx": 7,
+        "note": "要求4.2 会一直记得薪炎永燃（薪火传承）"
+      },
+      {
+        "sec": 86,
+        "segIdx": 9,
+        "note": "要求4.3 携愿的灯 星消的夜（屏幕截图115）"
+      },
+      {
+        "sec": 134,
+        "segIdx": 14,
+        "note": "要求4.4 仲夏的梦 红月的夜（月下1）"
+      }
+    ],
+    "chainedThreshold": 0.6,
+    "aspect": "16:9",
+    "baseRes": "768P",
+    "baseSize": [
+      1344,
+      768
+    ],
+    "deliverRes": [
+      {
+        "name": "1080p",
+        "size": [
+          1920,
+          1080
+        ],
+        "method": "realesrgan-x2-then-downsample",
+        "tag": "1080"
+      }
+    ],
+    "model": "MiniMax-H3",
+    "pricePerSecond": 0.5,
+    "maxPromptChars": 7000,
+    "promptStyleSuffix": "2D anime animation frame, cel-shaded, Miyoho-style key animation, clean line art, soft rim light, high-contrast cinematic lighting, no on-screen text, no watermark, no logo, no signature, cinematic 16:9 composition",
+    "subtitle": {
+      "font": "Microsoft YaHei",
+      "size": 54,
+      "minDisplaySec": 3,
+      "lineLevel": true,
+      "followMeasuredOnset": true
+    },
+    "transition": "cut",
+    "transitionDurSec": 0.4,
+    "segMaxSec": 15,
+    "upscale": {
+      "tool": "tools/upscale/realesrgan-ncnn-vulkan.exe",
+      "model": "realesr-animevideov3",
+      "scale": 2,
+      "chunk": 250,
+      "crf": "14",
+      "note": "87_pv_upscale.mjs 的默认值即此；实跑未留传参日志，按默认口径记录"
+    },
+    "deliverables": {
+      "pv": "10_h3video/pv/未来再见_PV_v2.mp4",
+      "pv1080p": "10_h3video/pv/未来再见_PV_v2_1080p.mp4",
+      "cover": "10_h3video/pv/cover/封面_D_10th_1146x717.jpg",
+      "copy": "10_h3video/pv/投稿文案.md"
+    }
+  },
+  "credits": {
+    "original": {
+      "词": "冥凰",
+      "曲": "Luna Safari",
+      "编曲": "Luna Safari",
+      "母带": "郭川",
+      "混音": "Luna Safari",
+      "制作人": "Luna Safari",
+      "原唱": [
+        "陶典",
+        "hanser",
+        "花玲",
+        "爆裂菊是也",
+        "林簌",
+        "Mace"
+      ]
+    },
+    "thisVersion": {
+      "改词": "GalaxyC",
+      "视频制作": "GalaxyC",
+      "tools": [
+        {
+          "role": "人声分离",
+          "name": "python-audio-separator + BS-Roformer"
+        },
+        {
+          "role": "歌声合成",
+          "name": "ACE Studio"
+        },
+        {
+          "role": "视频生成",
+          "name": "MiniMax-H3"
+        },
+        {
+          "role": "Agent 编排",
+          "name": "DeepSeek Harness"
+        }
+      ],
+      "disclaimer": "本作为非商业同人二创，全片含 AI 生成内容。原曲版权归 miHoYo / 崩坏3 所有。"
+    }
+  },
+  "budget": {
+    "totalCny": 150,
+    "spentCny": 109.5,
+    "authorized": true,
+    "authorizationNote": "用户 2026-09-27 一次总授权：PV 出片预算 ¥150，逐笔记台账，只在超预算时停。"
+  },
+  "cover": {
+    "title": "未来再见",
+    "subtitle": "崩坏3《女武神的餐桌Ⅱ》插曲 · AI 翻填翻唱",
+    "preset": "D_10th",
+    "sizes": [
+      [
+        1344,
+        768
+      ],
+      [
+        1146,
+        717
+      ]
+    ],
+    "logos": [
+      "10_h3video/pv/cover/logos/minimax_MiniMaxLogo-Light.png",
+      "10_h3video/pv/cover/logos/ace_logo.png",
+      "10_h3video/pv/cover/logos/dsh_whale_black.png"
+    ]
+  }
+}
