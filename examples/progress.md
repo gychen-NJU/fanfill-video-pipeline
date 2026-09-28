@@ -119,17 +119,23 @@
 
 ### 开源发布：`fanfill-video-pipeline`
 
-把「可复用的那一半」抽成独立仓库并推到 GitHub：**https://github.com/gychen-NJU/fanfill-video-pipeline**（public，48 个文件 / 666 KB，**MIT 许可**，`master` @ `00a288f`）。
+把「可复用的那一半」抽成独立仓库并推到 GitHub：**https://github.com/gychen-NJU/fanfill-video-pipeline**（public，49 个文件 / 676 KB，**MIT 许可**，`master` @ `f98f57a`）。
 
 - **做法**：不直接在工作区 `git init`（那里有 12.6 GB cache + 6.3 GB venvs + 2.1 GB 产物 + 244 MB 截图，一次失误就提交出几百 MB），而是用
   [dev/_probe/stage-repo.mjs](../dev/_probe/stage-repo.mjs) **复制**到一个干净 staging 目录再发布——工作区原文件零改动。
-- **带走**：技能（9 文件）、PV 脚本（10）、出片驱动 + MCP server（4）、工作台插件（4）、预设（2）、文档（6，含新写的英文 `INSTALL.md`）、`examples/`（8，只放文本：配置/进度/台账/成本/对齐/核验/分镜/文案）、自检工具（2）、英文 `README.md`。
+- **带走**：技能（9 文件）、PV 脚本（10）、出片驱动 + MCP server（4）、工作台插件（4）、预设（2）、文档（7：英文 `INSTALL.md` 与 `BOOTSTRAP.md` + 配置规范 + 能力报告 + 原项目三份 SOP）、`examples/`（8，只放文本：配置/进度/台账/成本/对齐/核验/分镜/文案）、自检工具（2）、根目录 `README.md` / `LICENSE` / `.gitignore`。合计 49 文件。
 - **没带走**：任何音频/视频/图片。`01_input`/`02_stems`/`09_aceproject`/`music` 与全部成片都留在本地——它们是第三方二创素材，不适合入库。
 - **体格检查（已做）**：无明文密钥、无媒体文件、无 >200KB 文件（最大 42 KB）、`client.js` 模块 id 与包名一致、无机器专属死码。
 - **发布前的可移植性修补**（3 处，都同步回本工作区）：
   1. `fanfill-config.mjs` 的 ffmpeg 路径改成**可解析**——`FANFILL_FFMPEG_DIR` 环境变量 > `video.ffmpegDir` 配置 > 历史默认 > PATH 兜底，并打印一次提示；
   2. `82_pv_clips.mjs` 的出片驱动路径支持 `FANFILL_H3` / `video.h3Driver` 覆盖，缺失时前置报错并给出三条出路；
   3. `ui-workbench/client.js` 删掉探测期的 URL 编码兜底死码（换机器必然打不中）。
+- **安装文档（补做）**：README 原来只有一句 Requirements 清单、没有安装步骤。
+  已补 `### 0. Install`（依赖表 + Windows ffmpeg 影子版陷阱 + 一条命令自检 + **可复制给 agent 的安装指令**）
+  与 `docs/BOOTSTRAP.md`（166 行 agent 侧清单：每步一个确切命令 + 期望结果 + 失败回退，
+  并写明"逐步验证、不许编造成功、只向用户要 API key 与 `dsh web` 重启"）。
+  **用全新克隆实测过**：`resolveFfmpeg()` 正常返回、`smoke-test` 13/13、故意把 ffmpeg 指到不存在的目录时
+  优雅退回 PATH 并给出一次性提示（不抛异常）。
 - **顺手抓到一个真 bug（已修）**：工作台 Host 半边对 `video.*Dir` 直接取配置值，
   而规范 §4.1 说这些字段**可省略**、缺省应按 `<video.dir>/<子目录>` 推导。
   结果：只写 `video.dir` 的最小配置下，`promptDir`/`refDir`/… 全部解析成 `undefined`

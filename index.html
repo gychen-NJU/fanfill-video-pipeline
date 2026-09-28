@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en" data-lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>fanfill-video-pipeline</title>
+<meta name="description" content="Turn a song plus a rewritten lyric sheet into a finished cover master and PV music video — an agent-driven, file-based pipeline.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>">
+<style>
+  :root{
+    --bg:#0e1014; --bg-2:#161a21; --bg-3:#1d222b; --line:#272d38;
+    --fg:#e8ebf0; --fg-2:#a8b0bd; --fg-3:#6f7887;
+    --accent:#6ea8fe; --accent-2:#8b7cf6;
+    --ok:#5fd39a; --warn:#e8b566; --err:#ef7a7a;
+    --radius:12px; --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",Roboto,sans-serif;
+    color-scheme:dark;
+  }
+  html[data-theme="light"]{
+    --bg:#fbfcfd; --bg-2:#f2f4f7; --bg-3:#e9edf2; --line:#dde3ea;
+    --fg:#1a1d23; --fg-2:#4d5560; --fg-3:#8b939f;
+    --accent:#2563eb; --accent-2:#7c3aed;
+    --ok:#0f9d58; --warn:#b5811b; --err:#d64545;
+    color-scheme:light;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;background:var(--bg);color:var(--fg);font-family:var(--sans);
+    font-size:16px;line-height:1.7;-webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  code,pre{font-family:var(--mono);font-size:.875em}
+  code{background:var(--bg-3);padding:.12em .38em;border-radius:5px}
+  pre{
+    background:var(--bg-2);border:1px solid var(--line);border-radius:var(--radius);
+    padding:14px 16px;overflow-x:auto;line-height:1.6;
+  }
+  pre code{background:none;padding:0}
+
+  header{
+    position:sticky;top:0;z-index:20;backdrop-filter:blur(12px);
+    background:color-mix(in srgb,var(--bg) 86%,transparent);
+    border-bottom:1px solid var(--line);
+  }
+  .bar{
+    max-width:940px;margin:0 auto;padding:10px 20px;
+    display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  }
+  .brand{font-weight:650;letter-spacing:-.01em}
+  .brand span{color:var(--fg-3);font-weight:400}
+  .grow{flex:1}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:var(--bg-2)}
+  .seg button{
+    appearance:none;border:0;background:none;color:var(--fg-2);font:inherit;font-size:14px;
+    padding:5px 13px;cursor:pointer;transition:background .15s,color .15s;
+  }
+  .seg button:hover{background:var(--bg-3);color:var(--fg)}
+  .seg button[aria-pressed="true"]{background:var(--accent);color:#fff;font-weight:600}
+  .icon-btn{
+    appearance:none;border:1px solid var(--line);background:var(--bg-2);color:var(--fg-2);
+    width:34px;height:32px;border-radius:9px;cursor:pointer;font-size:15px;line-height:1;
+  }
+  .icon-btn:hover{background:var(--bg-3);color:var(--fg)}
+
+  main{max-width:940px;margin:0 auto;padding:38px 20px 90px}
+  h1{font-size:2.05rem;line-height:1.25;margin:0 0 12px;letter-spacing:-.02em}
+  h2{font-size:1.32rem;margin:44px 0 14px;padding-top:10px;letter-spacing:-.01em}
+  h3{font-size:1.04rem;margin:26px 0 8px;color:var(--fg)}
+  p{margin:12px 0;color:var(--fg-2)}
+  strong{color:var(--fg);font-weight:600}
+  ul,ol{color:var(--fg-2);padding-left:22px}
+  li{margin:6px 0}
+  .lede{font-size:1.08rem;color:var(--fg-2)}
+  .note{
+    border-left:3px solid var(--accent);background:var(--bg-2);
+    padding:12px 16px;border-radius:0 var(--radius) var(--radius) 0;margin:18px 0;
+  }
+  .note p{margin:0;color:var(--fg-2)}
+  .warnnote{border-left-color:var(--warn)}
+  .oknote{border-left-color:var(--ok)}
+
+  .scroll{overflow-x:auto;margin:16px 0}
+  table{border-collapse:collapse;width:100%;font-size:.93rem;min-width:520px}
+  th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--fg-3);font-weight:500;white-space:nowrap}
+  td{color:var(--fg-2)}
+  tbody tr:hover{background:var(--bg-2)}
+
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 6px}
+  .chip{
+    font-size:.8rem;padding:3px 11px;border-radius:999px;
+    background:var(--bg-3);color:var(--fg-2);border:1px solid var(--line);
+  }
+  .chip.paid{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 40%,var(--line))}
+  .chip.free{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 40%,var(--line))}
+
+  .flow{
+    background:var(--bg-2);border:1px solid var(--line);border-radius:var(--radius);
+    padding:16px;font-family:var(--mono);font-size:.82rem;line-height:1.9;color:var(--fg-2);
+    overflow-x:auto;white-space:pre;
+  }
+  .flow b{color:var(--fg);font-weight:600}
+
+  footer{border-top:1px solid var(--line);padding:26px 20px 60px;color:var(--fg-3);font-size:.9rem}
+  footer .bar{padding:0}
+  .lang-hint{font-size:.82rem;color:var(--fg-3)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="bar">
+    <div class="brand">fanfill-video-pipeline <span id="t-tagline">— agent-driven cover PV pipeline</span></div>
+    <div class="grow"></div>
+    <div class="seg" role="group" aria-label="Language">
+      <button id="lang-en" type="button" aria-pressed="true" onclick="setLang('en')">English</button>
+      <button id="lang-zh" type="button" aria-pressed="false" onclick="setLang('zh')">中文</button>
+    </div>
+    <button class="icon-btn" id="theme-btn" type="button" title="Theme" onclick="toggleTheme()">◐</button>
+  </div>
+</header>
+
+<main id="content"></main>
+
+<footer>
+  <div class="bar">
+    <span id="t-footer"></span>
+    <div class="grow"></div>
+    <span class="lang-hint" id="t-hint"></span>
+  </div>
+</footer>
+
+<script>
+/* ------------------------------------------------------------------ *
+ * i18n content. Everything is injected so a language switch is instant
+ * and needs no page reload. Only the outer chrome is static HTML.
+ * ------------------------------------------------------------------ */
+const I18N = {
+  en: {
+    tagline: '— agent-driven cover PV pipeline',
+    footer: 'MIT licensed. Assets are not included — bring your own.',
+    hint: 'Language: click 中文 / English above',
+    html: `
+<h1>Turn a song and a rewritten lyric sheet into a finished cover&nbsp;+&nbsp;PV</h1>
+<p class="lede">An agent-driven, file-based pipeline. No database: the config, the shot list, the progress
+notes and the cost ledger are all plain text you can open in an editor — the web panel is just a view over them.</p>
+
+<div class="chips">
+  <span class="chip free">no package dependencies</span>
+  <span class="chip free">local-first</span>
+  <span class="chip free">every script has <code>--plan</code></span>
+  <span class="chip paid">one paid stage, ledgered</span>
+  <span class="chip">MIT</span>
+</div>
+
+<div class="note">
+  <p><strong>Generic by design.</strong> Nothing here is bound to a particular song. Give it any track and any
+  rewritten lyrics; the pipeline reads one project config and produces the same fixed set of artefacts. It was
+  extracted from a real delivery, whose data lives separately under <code>examples/</code>.</p>
+</div>
+
+<h2>The one idea worth stealing</h2>
+<div class="flow"><b>Files are the source of truth. No database.</b>
+
+   agent (skill + scripts) ────┤ project config │──── web panel (read-only)
+                                     │
+              progress doc   (human-readable progress + artefact index)
+              cost ledger    (one row per charge)
+              shot list      (the cuts — shared by scripts and UI)</div>
+<p>Changing songs means changing a workspace directory, not migrating a database.</p>
+
+<h2>How it works</h2>
+<p>Two delivery lines that meet in the middle:</p>
+<div class="flow">MUSIC   source ─► stems ─► align ─► vocal render ─► (voice conversion) ─► mix ─► master
+VIDEO   lyrics ─► shots ─► refs ─► prompts ─► generation ─► subs ─► assemble ─► upscale ─► verify</div>
+<p><strong>The coupling point:</strong> cuts must land on the <em>measured</em> vocal onsets, not the lyric
+file's nominal timestamps. Lyric files are hand-made timing art, not measurements — they drift, sometimes by
+most of a second, and a cut placed on a wrong timestamp slices through a word. So the scripts read the vocal
+stem's RMS envelope, find the true onsets and the real silences, and snap each cut into a silence valley.</p>
+
+<h3>Stages</h3>
+<div class="scroll"><table>
+<thead><tr><th>#</th><th>Stage</th><th>Command</th><th>Paid?</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>Survey + config</td><td>—</td><td>no</td></tr>
+<tr><td>2</td><td>Separate / transcribe / render / mix</td><td>your own music toolchain</td><td>no</td></tr>
+<tr><td>3</td><td>Lyric alignment + shot list</td><td><code>node scripts/80_pv_shotlist.mjs</code></td><td>no</td></tr>
+<tr><td>3b</td><td>Prompt self-check</td><td><code>node scripts/80b_check_prompts.mjs</code></td><td>no</td></tr>
+<tr><td>4</td><td>Reference images</td><td><code>node scripts/81_pv_refs.mjs</code></td><td>no</td></tr>
+<tr><td>5</td><td><strong>Video generation</strong></td><td><code>node scripts/82_pv_clips.mjs --only 1,2,3</code></td><td><strong>yes</strong></td></tr>
+<tr><td>6</td><td>Subtitles</td><td><code>node scripts/83_pv_subs.mjs --w 1920 --h 1080 --tag 1080</code></td><td>no</td></tr>
+<tr><td>7</td><td>Assemble</td><td><code>node scripts/84_pv_assemble.mjs</code></td><td>no</td></tr>
+<tr><td>8</td><td>Verify (7 checks)</td><td><code>node scripts/85_pv_verify.mjs --w 1920 --h 1080</code></td><td>no</td></tr>
+<tr><td>9</td><td>Cover</td><td><code>node scripts/86_pv_cover.mjs --only D</code></td><td>no</td></tr>
+<tr><td>10</td><td>Upscale</td><td><code>node scripts/87_pv_upscale.mjs</code></td><td>no (slow)</td></tr>
+</tbody></table></div>
+<p>Stage 2 is deliberately out of scope — separation, transcription, vocal synthesis and mixing are their own
+problem with their own tools. This repository owns the <strong>video line</strong> plus the decisions that bind
+it to music: timing, cost, verification, non-destructiveness.</p>
+
+<h2>Install</h2>
+<p>No package dependencies: every script is a standalone <code>.mjs</code> file.</p>
+<div class="scroll"><table>
+<thead><tr><th>Dependency</th><th>Needed for</th><th>Required?</th></tr></thead>
+<tbody>
+<tr><td>Node.js ≥ 18</td><td>every script</td><td><strong>yes</strong></td></tr>
+<tr><td>FFmpeg + ffprobe</td><td>alignment, refs, subtitles, assemble, verify</td><td><strong>yes</strong></td></tr>
+<tr><td>A video-generation API key</td><td>shot generation — the only paid stage</td><td>stage 5 only</td></tr>
+<tr><td>Real-ESRGAN ncnn-vulkan</td><td>free local upscale</td><td>optional</td></tr>
+<tr><td>ImageMagick</td><td>two cover layouts</td><td>optional</td></tr>
+<tr><td>DeepSeek Harness</td><td>skill / preset / panel integration</td><td>optional</td></tr>
+</tbody></table></div>
+
+<pre><code>git clone https://github.com/gychen-NJU/fanfill-video-pipeline my-song
+cd my-song
+node tools/smoke-test.mjs   # 13 self-checks on a synthetic workspace — writes nothing outside a temp dir</code></pre>
+
+<div class="note warnnote">
+  <p><strong>The one install trap on Windows:</strong> <code>ffmpeg</code> on <code>PATH</code> is often the
+  ImageMagick bundled build, which fails on real filter graphs. Point at a real one via
+  <code>FANFILL_FFMPEG_DIR</code>; the resolver falls back to <code>video.ffmpegDir</code>, then a legacy path,
+  then bare <code>ffmpeg</code> — printing a one-time notice when it does.</p>
+</div>
+
+<h3>Let an agent do it</h3>
+<p>Paste this into a fresh session in the cloned directory:</p>
+<pre><code>Read docs/BOOTSTRAP.md and install this project for me, following it step by step.
+Verify each step with the command it gives, stop and ask me only for things you
+cannot do yourself (the API key, and restarting dsh web if needed).
+When you finish, run \`node tools/smoke-test.mjs\` and report the result.</code></pre>
+<p><code>docs/BOOTSTRAP.md</code> gives an exact command, an expected result and a fallback for every step,
+plus the rules the agent must follow: verify each step, never invent success, and ask only for what it cannot
+do itself.</p>
+
+<h2>Hard constraints</h2>
+<p>Not style preferences — each one cost real time or real money.</p>
+<div class="scroll"><table>
+<thead><tr><th>Constraint</th><th>Why</th></tr></thead>
+<tbody>
+<tr><td>Prompt capped at 7000 characters</td><td>API hard limit.</td></tr>
+<tr><td>Reference images and a first-frame image are mutually exclusive</td><td>Want reference <em>and</em> continuity? Ref2VA for the opening shot, then chain each later shot from the previous clip's last frame.</td></tr>
+<tr><td>Reference routing needs the model's Ref2VA mode</td><td>The image model's <code>subject_reference</code> accepts only public URLs; local files cannot be referenced.</td></tr>
+<tr><td>Never extract frames from the finished film</td><td>It already has burned-in subtitles. Extract from the per-shot clips.</td></tr>
+<tr><td>Re-burn subtitles at the target resolution</td><td>Scaling a subtitled video scales the text too.</td></tr>
+<tr><td>Real upscaling ≠ resampling</td><td>Lanczos makes a bigger file, not a sharper picture. Use Real-ESRGAN.</td></tr>
+<tr><td>Measure onsets; do not trust the lyric file</td><td>Nominal timestamps drift; a cut on a wrong timestamp slices a word.</td></tr>
+<tr><td>Absolute paths for ffmpeg</td><td>A bundled ImageMagick <code>ffmpeg</code> shadows the real one.</td></tr>
+<tr><td>Write <code>.mjs</code> files; never <code>node -e</code></td><td>PowerShell 5.1 eats inline scripts.</td></tr>
+<tr><td>Read/write non-ASCII files with Node</td><td>A <code>Get-Content</code> → <code>ConvertFrom-Json</code> round-trip silently corrupts UTF-8.</td></tr>
+<tr><td>One shot ≤ <code>segMaxSec</code> (default 15 s)</td><td>Model limit; longer clips drift more.</td></tr>
+<tr><td>Subtitles hold ≥ 3 s by default</td><td>Below that the line is unreadable.</td></tr>
+</tbody></table></div>
+
+<h2>Discipline it assumes</h2>
+<ul>
+  <li><strong>Non-destructive by default.</strong> Inputs are read-only; replaced outputs move to <code>history/&lt;timestamp&gt;/</code>; new outputs get <code>vN</code> names. Never overwrite.</li>
+  <li><strong>One authorization, then a ledger.</strong> Ask once for a budget, record every charge, stop only when the estimate would exceed it.</li>
+  <li><strong>Quality-type acceptance needs a 1:1 comparison.</strong> "Sharper" is not delivered by a passing spec sheet — produce same-frame A/B evidence.</li>
+  <li><strong>Absolute paths, then stop for review.</strong></li>
+  <li><strong>Local-first.</strong> Upscaling, separation and mixing run on your own machine for free.</li>
+  <li><strong>Attribution is a blocker.</strong> AI-generated notice, non-commercial notice, full credit to the original.</li>
+</ul>
+
+<h2>What is and is not verified</h2>
+<div class="note oknote">
+  <p><strong>Verified:</strong> the pipeline ran end to end and produced a delivered film; the verify report and
+  the shot list were reproduced <em>byte-for-byte</em> after the scripts were parameterised; a deliberately
+  different synthetic song runs the shot-list stage with zero errors, honouring every config value
+  (<code>tools/gensong-test.mjs</code>); read-only zones' fingerprints are identical before and after; the panel
+  was opened in a real browser with all five tabs rendering live data and 0 console errors.</p>
+</div>
+<div class="note warnnote">
+  <p><strong>Not verified — treat as untested:</strong> light/dark theme rendering of the panel (token-based by
+  inspection, only dark was screenshotted); the 2K paid path, dissolve transitions and the <code>L2VA</code> /
+  <code>&lt;Video N&gt;</code> prompt forms were never used; which upscaling model was actually used (no argument
+  log survives).</p>
+</div>
+
+<h2>Links</h2>
+<ul>
+  <li><a href="https://github.com/gychen-NJU/fanfill-video-pipeline">Repository</a></li>
+  <li><a href="https://github.com/gychen-NJU/fanfill-video-pipeline/blob/master/README.md">README (English)</a>
+      · <a href="https://github.com/gychen-NJU/fanfill-video-pipeline/blob/master/README.zh-CN.md">README（中文）</a></li>
+  <li><a href="https://github.com/gychen-NJU/fanfill-video-pipeline/blob/master/docs/INSTALL.md">Install guide</a>
+      · <a href="https://github.com/gychen-NJU/fanfill-video-pipeline/blob/master/docs/BOOTSTRAP.md">Agent bootstrap</a></li>
+  <li><a href="https://github.com/gychen-NJU/fanfill-video-pipeline/blob/master/docs/08_project-config-spec.md">Project config spec</a></li>
+</ul>
+`
+  },
+  zh: {
+    tagline: '— 智能体驱动的翻填 PV 流水线',
+    footer: 'MIT 许可。素材不在仓库内 —— 请自备。',
+    hint: '语言：点上方 中文 / English 即可切换',
+    html: `
+<h1>把一首歌 + 一份翻填词，做成成品翻唱 &nbsp;+&nbsp; PV</h1>
+<p class="lede">智能体驱动、文件式流水线，不引入数据库：配置、分镜、进度、台账全是你能用编辑器直接打开改的纯文本——
+网页面板只是它们的视图。</p>
+
+<div class="chips">
+  <span class="chip free">零包依赖</span>
+  <span class="chip free">本地优先</span>
+  <span class="chip free">每个脚本都有 <code>--plan</code></span>
+  <span class="chip paid">只有一个花钱阶段，逐笔记账</span>
+  <span class="chip">MIT</span>
+</div>
+
+<div class="note">
+  <p><strong>设计上就是通用的。</strong> 这里没有任何东西绑定某一首歌。给任意曲目 + 任意翻填词，流水线读同一份项目配置、
+  产出同一套固定结构的产物。它是从一次真实交付里抽出来的，那次运行的数据单独放在 <code>examples/</code>。</p>
+</div>
+
+<h2>唯一值得抄走的设计</h2>
+<div class="flow"><b>文件即真相源，不引入数据库。</b>
+
+   智能体（技能 + 脚本） ────┤ 项目配置 │──── 网页面板（只读）
+                                 │
+              进度文档   （人可读的进度 + 产物索引）
+              成本台账   （每笔花费一行）
+              分镜表     （切点 —— 脚本与界面共享）
+</div>
+<p>换歌 = 换一个工作区目录，不需要迁移数据库。</p>
+
+<h2>怎么跑</h2>
+<p>两条交付线在中间会合：</p>
+<div class="flow">音乐线  原曲 ─► 分离 ─► 对齐 ─► 出人声 ─►（换音色）─► 混音 ─► 母带
+视频线  歌词 ─► 分镜 ─► 参考图 ─► 提示词 ─► 生成 ─► 字幕 ─► 合成 ─► 超分 ─► 核验</div>
+<p><strong>耦合点：</strong>切点必须踩在<strong>实测</strong>人声起音上，而不是歌词文件的名义时间戳上。歌词文件是手工对的
+艺术品、不是测量结果——它会漂，有时漂掉大半秒，而按错的时间下刀会把一个词切成两半。所以脚本会读人声干声轨的 RMS 包络，
+找出真实起音与真实静音，再把每个切点<strong>吸附进静音谷</strong>。</p>
+
+<h3>阶段</h3>
+<div class="scroll"><table>
+<thead><tr><th>#</th><th>阶段</th><th>命令</th><th>花钱？</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>素材盘点 + 写配置</td><td>—</td><td>否</td></tr>
+<tr><td>2</td><td>分离 / 扒谱 / 出人声 / 混音</td><td>用你自己的音乐工具链</td><td>否</td></tr>
+<tr><td>3</td><td>歌词对齐 + 分镜</td><td><code>node scripts/80_pv_shotlist.mjs</code></td><td>否</td></tr>
+<tr><td>3b</td><td>提示词自检</td><td><code>node scripts/80b_check_prompts.mjs</code></td><td>否</td></tr>
+<tr><td>4</td><td>参考图</td><td><code>node scripts/81_pv_refs.mjs</code></td><td>否</td></tr>
+<tr><td>5</td><td><strong>视频生成</strong></td><td><code>node scripts/82_pv_clips.mjs --only 1,2,3</code></td><td><strong>是</strong></td></tr>
+<tr><td>6</td><td>字幕</td><td><code>node scripts/83_pv_subs.mjs --w 1920 --h 1080 --tag 1080</code></td><td>否</td></tr>
+<tr><td>7</td><td>合成</td><td><code>node scripts/84_pv_assemble.mjs</code></td><td>否</td></tr>
+<tr><td>8</td><td>核验（7 项）</td><td><code>node scripts/85_pv_verify.mjs --w 1920 --h 1080</code></td><td>否</td></tr>
+<tr><td>9</td><td>封面</td><td><code>node scripts/86_pv_cover.mjs --only D</code></td><td>否</td></tr>
+<tr><td>10</td><td>超分</td><td><code>node scripts/87_pv_upscale.mjs</code></td><td>否（耗时）</td></tr>
+</tbody></table></div>
+<p><strong>阶段 2 是故意不做的</strong>：分离、扒谱、歌声合成、混音各有各的工具、各有各的难题。这个仓库负责的是
+<strong>视频线</strong>，以及把它和音乐绑在一起的那些决策：时间、成本、验收、非破坏性。</p>
+
+<h2>安装</h2>
+<p>没有任何包依赖：每个脚本都是独立的 <code>.mjs</code> 文件。</p>
+<div class="scroll"><table>
+<thead><tr><th>依赖</th><th>用途</th><th>必需？</th></tr></thead>
+<tbody>
+<tr><td>Node.js ≥ 18</td><td>全部脚本</td><td><strong>是</strong></td></tr>
+<tr><td>FFmpeg + ffprobe</td><td>对齐 / 参考图 / 字幕 / 合成 / 核验</td><td><strong>是</strong></td></tr>
+<tr><td>视频生成 API key</td><td>出片（唯一花钱阶段）</td><td>仅阶段 5</td></tr>
+<tr><td>Real-ESRGAN ncnn-vulkan</td><td>免费本地超分</td><td>可选</td></tr>
+<tr><td>ImageMagick</td><td>两个封面版式</td><td>可选</td></tr>
+<tr><td>DeepSeek Harness</td><td>技能 / 预设 / 面板集成</td><td>可选</td></tr>
+</tbody></table></div>
+
+<pre><code>git clone https://github.com/gychen-NJU/fanfill-video-pipeline my-song
+cd my-song
+node tools/smoke-test.mjs   # 在合成工作区上做 13 项自检 —— 不往仓库里写任何东西</code></pre>
+
+<div class="note warnnote">
+  <p><strong>Windows 上唯一的安装坑：</strong><code>PATH</code> 里的 <code>ffmpeg</code> 常常是 ImageMagick
+  自带的那份，跑真实滤镜链会失败。用 <code>FANFILL_FFMPEG_DIR</code> 指向真的那个；解析优先级是
+  <code>FANFILL_FFMPEG_DIR</code> → <code>video.ffmpegDir</code> → 历史默认 → <code>PATH</code> 裸名，
+  回退时会打印一次性提示。</p>
+</div>
+
+<h3>让智能体帮你装</h3>
+<p>把下面这段贴到克隆目录下的新会话里：</p>
+<pre><code>Read docs/BOOTSTRAP.md and install this project for me, following it step by step.
+Verify each step with the command it gives, stop and ask me only for things you
+cannot do yourself (the API key, and restarting dsh web if needed).
+When you finish, run \`node tools/smoke-test.mjs\` and report the result.</code></pre>
+<p><code>docs/BOOTSTRAP.md</code> 给每一步都配了确切命令、期望结果与失败回退，并写死了智能体必须遵守的规则：
+逐步验证、不许编造成功、只向用户要它自己做不到的事。</p>
+
+<h2>硬约束</h2>
+<p>不是风格偏好——每一条都花过真实时间或真实金钱。</p>
+<div class="scroll"><table>
+<thead><tr><th>约束</th><th>为什么</th></tr></thead>
+<tbody>
+<tr><td>单条提示词上限 7000 字符</td><td>API 硬顶。</td></tr>
+<tr><td>参考图与首帧图互斥</td><td>既要参考又要连续？首镜用 Ref2VA，后续每段拿上一段末帧续拍。</td></tr>
+<tr><td>参考图必须走模型的 Ref2VA 模式</td><td>图像模型的 <code>subject_reference</code> 只收公网 URL，本地文件引用不了。</td></tr>
+<tr><td>绝不从成片取帧</td><td>成片已烧进字幕。要从每段原始片段取。</td></tr>
+<tr><td>字幕在目标分辨率重烧</td><td>缩放带字幕的视频，字会被一起缩放。</td></tr>
+<tr><td>真超分 ≠ 重采样</td><td>lanczos 只是把文件变大，不是把画面变清楚。用 Real-ESRGAN。</td></tr>
+<tr><td>测起音，别信歌词文件</td><td>名义时间戳会漂；按错的时间下刀会切断词。</td></tr>
+<tr><td>ffmpeg 用绝对路径</td><td>PATH 上 ImageMagick 自带的会挡掉真的那个。</td></tr>
+<tr><td>写 <code>.mjs</code>，不要 <code>node -e</code></td><td>PowerShell 5.1 会吃掉内联脚本。</td></tr>
+<tr><td>含非 ASCII 的文件用 Node 读写</td><td><code>Get-Content</code> → <code>ConvertFrom-Json</code> 往返会静默写坏 UTF-8。</td></tr>
+<tr><td>单段 ≤ <code>segMaxSec</code>（默认 15s）</td><td>模型限制；段越长漂得越厉害。</td></tr>
+<tr><td>字幕默认至少显示 3s</td><td>低于这个值读不清。</td></tr>
+</tbody></table></div>
+
+<h2>默认纪律</h2>
+<ul>
+  <li><strong>默认非破坏性。</strong>输入只读；被替换的产物移入 <code>history/&lt;时间戳&gt;/</code>；新产物用 <code>vN</code> 命名。绝不覆盖。</li>
+  <li><strong>一次总授权 + 逐笔台账。</strong>预算问一次，每笔记账，只在预估会突破时停。</li>
+  <li><strong>质量型需求必须 1:1 对比。</strong>"更清晰"不是靠参数全绿交付的——要出同帧 A/B 证据。</li>
+  <li><strong>给绝对路径，然后停下等检查。</strong></li>
+  <li><strong>本地免费优先。</strong>超分、分离、混音都跑在自己机器上。</li>
+  <li><strong>署名是交付阻塞项。</strong>AI 生成标识 + 非商用声明 + 完整原作出处。</li>
+</ul>
+
+<h2>哪些验过、哪些没验</h2>
+<div class="note oknote">
+  <p><strong>验证过：</strong>整条流水线端到端跑通并交付了成片；脚本配置化后，核验报告与分镜表<strong>逐字节复现</strong>；
+  一个参数刻意不同的合成曲目能跑通分镜阶段、零报错且每个配置项都生效（<code>tools/gensong-test.mjs</code>）；
+  只读保护区在整轮跑完前后内容指纹一致；工作台面板在真实浏览器里打开，5 个 Tab 全渲染真实数据、console 错误 0 条。</p>
+</div>
+<div class="note warnnote">
+  <p><strong>没验证 —— 请当未测：</strong>面板的亮/暗主题渲染（代码层确认全走主题 token，但只截过暗色）；
+  2K 花钱路线、溶解转场、<code>L2VA</code> / <code>&lt;Video N&gt;</code> 这几种形态从未用过；
+  超分实际用的哪个模型（没留下传参日志）。</p>
+</div>
+
+<h2>链接</h2>
+<ul>
+  <li><a href="https://github.com/gychen-NJU/fanfill-video-pipeline">仓库</a></li>
+  <li><a href="https://github.com/gychen-NJU/fanfill-video-pipeline/blob/master/README.zh-CN.md">README（中文）</a>
+      · <a href="https://github.com/gychen-NJU/fanfill-video-pipeline/blob/master/README.md">README (English)</a></li>
+  <li><a href="https://github.com/gychen-NJU/fanfill-video-pipeline/blob/master/docs/INSTALL.md">安装指南</a>
+      · <a href="https://github.com/gychen-NJU/fanfill-video-pipeline/blob/master/docs/BOOTSTRAP.md">智能体安装清单</a></li>
+  <li><a href="https://github.com/gychen-NJU/fanfill-video-pipeline/blob/master/docs/08_project-config-spec.md">项目配置规范</a></li>
+</ul>
+`
+  }
+};
+
+const KEY = 'fanfill-lang';
+const THEME_KEY = 'fanfill-theme';
+
+function setLang(lang, { persist = true } = {}) {
+  const l = I18N[lang] ? lang : 'en';
+  document.documentElement.lang = l === 'zh' ? 'zh-CN' : 'en';
+  document.documentElement.dataset.lang = l;
+  document.getElementById('content').innerHTML = I18N[l].html;
+  document.getElementById('t-tagline').textContent = I18N[l].tagline;
+  document.getElementById('t-footer').textContent = I18N[l].footer;
+  document.getElementById('t-hint').textContent = I18N[l].hint;
+  document.getElementById('lang-en').setAttribute('aria-pressed', String(l === 'en'));
+  document.getElementById('lang-zh').setAttribute('aria-pressed', String(l === 'zh'));
+  document.title = l === 'zh'
+    ? 'fanfill-video-pipeline（翻填视频流水线）'
+    : 'fanfill-video-pipeline';
+  if (persist) { try { localStorage.setItem(KEY, l); } catch {} }
+
+  // Keep ?lang= shareable without a reload.
+  const url = new URL(location.href);
+  if (url.searchParams.get('lang') !== l) {
+    url.searchParams.set('lang', l);
+    history.replaceState(null, '', url);
+  }
+}
+
+function toggleTheme() {
+  const cur = document.documentElement.dataset.theme || 'dark';
+  const next = cur === 'dark' ? 'light' : 'dark';
+  applyTheme(next, true);
+}
+
+function applyTheme(theme, persist) {
+  document.documentElement.dataset.theme = theme;
+  document.getElementById('theme-btn').textContent = theme === 'dark' ? '◐' : '◑';
+  if (persist) { try { localStorage.setItem(THEME_KEY, theme); } catch {} }
+}
+
+/* Boot: explicit ?lang= wins, then stored choice, then browser language, else English. */
+(function boot() {
+  const q = new URLSearchParams(location.search).get('lang');
+  let stored = null;
+  try { stored = localStorage.getItem(KEY); } catch {}
+  const nav = (navigator.language || 'en').toLowerCase();
+  const initial = q || stored || (nav.startsWith('zh') ? 'zh' : 'en');
+  setLang(initial, { persist: false });
+
+  let theme = null;
+  try { theme = localStorage.getItem(THEME_KEY); } catch {}
+  if (!theme) {
+    theme = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  }
+  applyTheme(theme, false);
+})();
+</script>
+</body>
+</html>
