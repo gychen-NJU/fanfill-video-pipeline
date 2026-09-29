@@ -1,15 +1,13 @@
 {
-  "name": "mcp-server",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "name": "fanfill-h3-mcp",
+  "version": "2.0.0",
+  "description": "MCP server exposing the MiniMax H3 video driver as native agent tools (mcp__h3__*): estimate, submit, poll+download, status, list, cancel, prompt-enhance, 2K regenerate, upload asset.",
+  "license": "MIT",
+  "private": true,
   "type": "commonjs",
+  "scripts": {
+    "test": "node _selftest.mjs"
+  },
   "dependencies": {
     "@modelcontextprotocol/client": "^2.0.0",
     "@modelcontextprotocol/server": "^2.0.0",

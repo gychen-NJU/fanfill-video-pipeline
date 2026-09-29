@@ -233,7 +233,7 @@ These are not style preferences — each one cost real time or real money:
 fanfill-video-pipeline/
 ├── skills/fanfill-video-pipeline/   # the SOP: SKILL.md + references/01..08
 ├── scripts/                          # 80–87 + 80b + lib/fanfill-config.mjs
-├── drivers/minimax-h3/               # dependency-free video-gen driver + MCP server
+├── drivers/minimax-h3/               # video-gen driver (dependency-free) + MCP server (npm install)
 ├── ui-workbench/                     # DSH UI plugin (guided pipeline panel)
 ├── agent-preset/                     # DSH agent preset
 ├── tools/                            # reuse checks (smoke + cross-song genericity)

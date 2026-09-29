@@ -233,7 +233,7 @@ cp -r skills/fanfill-video-pipeline .agents/skills/     # 热加载，不用重�
 fanfill-video-pipeline/
 ├── skills/fanfill-video-pipeline/   # 技能：SKILL.md + references/01..08
 ├── scripts/                          # 80–87 + 80b + lib/fanfill-config.mjs
-├── drivers/minimax-h3/               # 零依赖出片驱动 + MCP server
+├── drivers/minimax-h3/               # 出片驱动（零依赖）+ MCP server（需 npm install）
 ├── ui-workbench/                     # DSH UI 插件（引导式流水线面板）
 ├── agent-preset/                     # DSH Agent 预设
 ├── tools/                            # 复用检查（自检 + 换歌验证）

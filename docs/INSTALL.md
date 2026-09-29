@@ -163,6 +163,26 @@ export FANFILL_H3=/absolute/path/to/h3.mjs
 
 `82 --plan` reports a missing driver explicitly rather than failing at submission time.
 
+### 4.1 Optional — the H3 MCP server (turns H3 into agent-native tools)
+
+The repo also ships an MCP server (`drivers/minimax-h3/mcp-server/`). It wraps the *same* driver, so registering it gives the agent native tools (prefix `mcp__h3__*`: estimate, submit, poll+download, status, list, cancel, prompt-enhance, 2K regenerate, upload asset) instead of a command line.
+
+> **The driver is dependency-free; the MCP server is not.** It uses the official MCP SDK v2 (`@modelcontextprotocol/server` + `client` + `zod`) and `node_modules` is never committed, so install its dependencies once:
+
+```bash
+mkdir -p tools/minimax-h3/mcp-server
+cp drivers/minimax-h3/mcp-server/* tools/minimax-h3/mcp-server/
+cd tools/minimax-h3/mcp-server && npm install
+```
+
+Then append the `insert` row from [`docs/04_h3-workflow.md`](04_h3-workflow.md) §8.3 to your profile patch (`$DSH_HOME/profiles/<profile>/cordis.patch.yml`), replacing `<WORKSPACE>` with your absolute workspace path. A profile-patch edit usually applies in about two seconds; if `mcp__h3__*` still is not there, restart `dsh web`.
+
+**Verify it without spending money:**
+
+```bash
+node tools/minimax-h3/mcp-server/_selftest.mjs   # starts the server through the official client SDK, lists tools, calls a read-only one, checks the over-budget refusal
+```
+
 ## 5. Sanity checks
 
 ```bash

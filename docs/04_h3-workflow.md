@@ -290,6 +290,8 @@ non_diegetic_music: A slow solo piano figure with sustained warm string pads und
 ### 8.2 实现要点
 
 - 服务器：`tools/minimax-h3/mcp-server/minimax-h3-mcp.mjs`，基于官方 `@modelcontextprotocol/server` v2（2026-07-28 规范）的 `serveStdio`。**不重写任何 API 逻辑，全部复用 `h3.mjs`**（单一事实源）。
+
+> **从仓库取用时的两步**（本仓库把源文件放在 `drivers/minimax-h3/mcp-server/`）：①先把整个目录复制到 `tools/minimax-h3/mcp-server/`；②在那个目录里跑 `npm install` —— **驱动 `h3.mjs` 是零依赖的，但这个 MCP 服务器不是**（需要官方 MCP SDK v2：`@modelcontextprotocol/server` + `client` + `zod`，`node_modules` 不入仓）。
 - **异步设计**：MCP 单次请求默认超时 **60 秒**（`DEFAULT_REQUEST_TIMEOUT_MSEC`），而一次 5 秒出片实测要 111 秒（一次真实交付的参照）→ `generate` 只提交、立刻返回 task_id，由 `h3_fetch_result` 分次轮询（单次上限 50 秒）。
 - **金额保护**：预估超上限且未确认 → **提交前**直接拒绝，零扣费（一次真实交付里 15s@2K = ¥12 的请求被拒）。
 - **密钥不入配置文件**：服务器自行从 `~/.dsh/.credentials.yaml` 读取（DSH 的 MCP stdio 客户端还会按 `/KEY|PASSWORD|SECRET|TOKEN/` 清洗环境变量，所以也不该靠 env 传）。

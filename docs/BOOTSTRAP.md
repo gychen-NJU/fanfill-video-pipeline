@@ -127,6 +127,7 @@ Expected: a per-shot table plus a cost estimate, with `⛔` if the batch would e
 
 ## Step 5 — Optional extras
 
+- **The H3 MCP server** (native `mcp__h3__*` agent tools instead of a CLI): copy `drivers/minimax-h3/mcp-server/` to `tools/minimax-h3/mcp-server/`, run `npm install` there (**the driver is dependency-free, this server is not** — it uses the official MCP SDK v2), then append the `insert` row from `docs/04_h3-workflow.md` §8.3 to your profile patch. Check it with `node tools/minimax-h3/mcp-server/_selftest.mjs`.
 - **Real-ESRGAN** (free local upscale): put `realesrgan-ncnn-vulkan` somewhere and either add it to `PATH` or set `video.upscale.tool` in the config. Without it, skip stage 10 — you still get the base-resolution film.
 - **ImageMagick**: only two cover layouts use it. Without it those layouts are unavailable; the rest work. Set `FANFILL_MAGICK` if it is not on `PATH`.
 
