@@ -34,6 +34,7 @@ const cfg = loadConfig(ROOT)
 const PV = path.dirname(cfg.dirs.clips)                 // PV 根（.norm 等中间产物落这里）
 const NORM = path.join(PV, '.norm')
 const AUDIO = cfg.abs(cfg.raw.audio.master)
+const AUDIO_DEFAULT = AUDIO
 const ASS = path.join(cfg.dirs.subs, `${cfg.raw.song.name}.ass`)
 const [W, H] = cfg.delivery.baseSize
 const FPS = Number(cfg.raw.song.fps)
@@ -44,6 +45,8 @@ const TP_DBTP = Number(LOUD.truePeakDbtp ?? -1)
 const OUT = path.resolve(PV, arg('out', `${cfg.raw.song.name}_PV_v1.mp4`))
 const ASS_OVERRIDE = arg('ass', '')   // 交付分辨率版用 --ass 指向对应画布的字幕
 const TIMELINE_OVERRIDE = arg('timeline', '')
+const AUDIO_OVERRIDE = arg('audio', '')  // 换音轨（如新音色重出的母版）时用 --audio 指向它
+const FINAL_AUDIO = AUDIO_OVERRIDE ? path.resolve(ROOT, AUDIO_OVERRIDE) : AUDIO_DEFAULT
 const dryRun = has('dry-run')
 
 /** 子进程：spawn 失败不抛，统一成 code=-1（错误要响，不要静默） */
@@ -84,7 +87,7 @@ for (const s of segs) {
 if (missing.length) { log(`❌ 缺成片：段 ${missing.join(',')}；先跑 scripts/82_pv_clips.mjs`); process.exit(1) }
 const ASS_USED = ASS_OVERRIDE ? path.resolve(ROOT, ASS_OVERRIDE) : ASS
 if (!fs.existsSync(ASS_USED)) { log(`❌ 缺字幕：${ASS_USED}；先跑 scripts/83_pv_subs.mjs`); process.exit(1) }
-if (!AUDIO || !fs.existsSync(AUDIO)) { log(`❌ 缺母版音频：${AUDIO || cfg.raw.audio.master}（配置 audio.master）`); process.exit(1) }
+if (!FINAL_AUDIO || !fs.existsSync(FINAL_AUDIO)) { log(`❌ 缺母版音频：${FINAL_AUDIO || cfg.raw.audio.master}（配置 audio.master，或 --audio 指定）`); process.exit(1) }
 
 const rough = TIMELINE_OVERRIDE ? path.resolve(ROOT, TIMELINE_OVERRIDE) : path.join(NORM, 'timeline.mp4')
 
@@ -147,8 +150,9 @@ archiveOld([OUT], `84 重新合成成片 ${path.basename(OUT)}`)
 const r = await tryRun(FFMPEG, [
   '-y', '-v', 'error',
   '-i', rough,
-  '-i', AUDIO,
-  '-filter_complex', `${filter};[1:a]loudnorm=I=${I_LUFS}:TP=${TP_DBTP}:LRA=11[a]`,
+  '-i', FINAL_AUDIO,
+  // apad：新音轨可能比视频短（如尾部静音被裁），补静音到 TOTAL，避免结尾没声
+  '-filter_complex', `${filter};[1:a]apad=whole_dur=${TOTAL.toFixed(3)},loudnorm=I=${I_LUFS}:TP=${TP_DBTP}:LRA=11[a]`,
   '-map', '[v]', '-map', '[a]',
   '-t', TOTAL.toFixed(3),
   '-c:v', 'libx264', '-crf', '17', '-preset', 'medium', '-pix_fmt', 'yuv420p',
